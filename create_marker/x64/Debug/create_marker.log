@@ -1,0 +1,89 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(391,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (aruco_marker.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  stdafx.cpp
+  Block.cpp
+  BlockDetector.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(338): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(432): warning C4101: 'current': unreferenced local variable
+  Board.cpp
+  Bracket.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\bracket.cpp(103): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\bracket.cpp(148): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\bracket.cpp(149): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\bracket.cpp(174): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\bracket.cpp(175): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+  create_markers.cpp
+  Function.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\function.cpp(103): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\function.cpp(104): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\function.cpp(125): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\function.cpp(170): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\function.cpp(171): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  MarkerDetector.cpp
+  calibration.cpp
+  Note.cpp
+  ShapeDetector.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\shapedetector.cpp(22): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  SoundManager.cpp
+  tracker.cpp
+  trainedBlock.cpp
+  trainedBlocks.cpp
+  trainedBlocksTracking.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(40): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(82): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(83): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(128): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(128): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(129): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(129): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(130): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(130): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(131): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(131): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(132): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(132): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(133): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(133): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(274): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(296): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(297): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  Variable.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\variable.cpp(56): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\variable.cpp(57): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\variable.cpp(83): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+  Generating Code...
+  create_marker.vcxproj -> C:\Users\Paolo Grignaffini\Desktop\create_marker\x64\Debug\blockDetection.exe
+  Copy Intel RealSense SDK 2.0 shared module next to the application
+  C:\Program Files (x86)\Intel RealSense SDK 2.0\bin\x64\realsense2.dll
+  1 File(s) copied
