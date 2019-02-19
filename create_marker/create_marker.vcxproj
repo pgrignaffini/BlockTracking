@@ -165,11 +165,9 @@
     <ClInclude Include="Block.h" />
     <ClInclude Include="BlockDetector.h" />
     <ClInclude Include="Board.h" />
-    <ClInclude Include="Bracket.h" />
+    <ClInclude Include="ConfigurationManager.h" />
     <ClInclude Include="Function.h" />
-    <ClInclude Include="MarkerDetector.h" />
     <ClInclude Include="Note.h" />
-    <ClInclude Include="ShapeDetector.h" />
     <ClInclude Include="SoundManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -181,13 +179,9 @@
     <ClCompile Include="Block.cpp" />
     <ClCompile Include="BlockDetector.cpp" />
     <ClCompile Include="Board.cpp" />
-    <ClCompile Include="Bracket.cpp" />
-    <ClCompile Include="create_markers.cpp" />
+    <ClCompile Include="ConfigurationManager.cpp" />
     <ClCompile Include="Function.cpp" />
-    <ClCompile Include="MarkerDetector.cpp" />
-    <ClCompile Include="calibration.cpp" />
     <ClCompile Include="Note.cpp" />
-    <ClCompile Include="ShapeDetector.cpp" />
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -195,7 +189,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="tracker.cpp" />
     <ClCompile Include="trainedBlock.cpp" />
     <ClCompile Include="trainedBlocks.cpp" />
     <ClCompile Include="trainedBlocksTracking.cpp" />

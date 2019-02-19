@@ -37,6 +37,12 @@ std::vector<int> BlockDetector::getIDs()
 	return BlockDetector::IDs;
 }
 
+vector<vector<Point2f>> BlockDetector::getIdentifiedCorners()
+{
+	return BlockDetector::markerCorners;
+}
+
+
 //Setters
 
 void BlockDetector::setCalibrationSquareDimension(float calib)
@@ -74,11 +80,6 @@ double BlockDetector::angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 	double dx2 = pt2.x - pt0.x;
 	double dy2 = pt2.y - pt0.y;
 	return (dx1*dx2 + dy1*dy2) / sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
-}
-
-vector<vector<Point2f>> BlockDetector::getIdentifiedCorners()
-{
-	return BlockDetector::markerCorners;
 }
 
 void BlockDetector::createArucoMarkers()
@@ -332,7 +333,9 @@ string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, 
 	//cout << "Vertex" << nvertex << endl;
 	//std::cout << "Block size: " << blocks.size();
 
-	if (approx.size() >= 4)
+	int approx_size = approx.size();
+
+	if (approx_size >= 4)
 	{
 		// Number of vertices of polygonal curve
 		int vtc = approx.size();
@@ -351,10 +354,14 @@ string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, 
 
 		// Use the degrees obtained above and the number of vertices
 		// to determine the shape of the contour
-		if (approx.size() == 4 && mincos >= -0.1 && maxcos <= 0.3)
+		if (approx_size == 4 && mincos >= -0.1 && maxcos <= 0.3)
 		{
 			cv::Rect r = boundingRect(contours[i]);
 			double ratio = abs(1 - (double)r.width / r.height);
+
+			block_type = "variable";
+
+			/* Code for Break block detection
 
 			if (ratio <= 0.15)
 			{
@@ -364,20 +371,26 @@ string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, 
 			else
 			{
 				block_type = "break";
-			}
+			}*/
 		}
 
-		else if (approx.size() == 6 && maxcos < 0.3) //noise makes the pentagon cut on the top, so the vertices are 6
+		else if (approx_size == 5 || approx_size == 6 || approx_size == 7) //noise makes the pentagon cut on the top, so the vertices are 6
 		{
 			block_type = "function";
 		}
 
-		else if (approx.size() >= 8 && maxcos < 0.3)
+		else if (approx_size >= 8 && maxcos < 0.3)
 		{
+
+			block_type = "note";
+
+			/* Code for Bracket block detection
+
 			double area = contourArea(contours[i]);
 			cv::Rect r = boundingRect(contours[i]);
 			int radius = r.width / 2;
 
+			
 			if (abs(1 - ((double)r.width / r.height)) <= 0.3 &&
 				abs(1 - (area / (CV_PI * pow(radius, 2)))) <= 0.3)
 			{
@@ -385,6 +398,7 @@ string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, 
 			}
 
 			else block_type = "bracket";
+			*/
 		}
 
 	}
@@ -404,7 +418,7 @@ int BlockDetector::findIdentifier(InputArrayOfArrays _corners, InputArray _ids, 
 	{
 		
 		Mat currentMarker = _corners.getMat(i);
-		CV_Assert(currentMarker.total() == 4 && currentMarker.type() == CV_32FC2);
+		//CV_Assert(currentMarker.total() == 4 && currentMarker.type() == CV_32FC2);
 
 		if (_ids.total() != 0)
 		{		
@@ -431,6 +445,8 @@ void BlockDetector::check_for_changes(unordered_map<int, trainedBlock*>& tBlocks
 	int id;
 	trainedBlock* current;
 	vector<set<trainedBlock*, xDecr>::iterator> toErase;
+
+	//cout << "Checking for changes on the board..." << endl;
 	
 	//erase blocks no longer on board
 	bool found;

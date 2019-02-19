@@ -3,40 +3,28 @@
 
 Function::Function()
 {
-}
 
+}
 
 Function::~Function()
 {
-}
 
+}
 
 Function::Function(const trainedBlock &b) : trainedBlock(b)
 {
-	cycles = 0;
 	range = cv::Rect2f();
-	defined = false;
+	looping = false;
 }
-
 
 set<trainedBlock*, xDecr>* Function::getBlocks() const
 {
 	return Function::blocks;
 }
 
-int Function::getCycles()
-{
-	return Function::cycles;
-}
-
 cv::Rect2f Function::getRange()
 {
 	return Function::range;
-}
-
-bool Function::isDefined()
-{
-	return Function::defined;
 }
 
 void Function::setBlocks(set<trainedBlock*, xDecr>* _blocks)
@@ -49,9 +37,9 @@ void Function::setRange(cv::Rect2f _range)
 	Function::range = _range;
 }
 
-void Function::incrementCycles(int n)
+void Function::setLoop(bool isLoop)
 {
-	Function::cycles += n;
+	Function::looping = isLoop;
 }
 
 void Function::addBlock(trainedBlock* block)
@@ -59,18 +47,19 @@ void Function::addBlock(trainedBlock* block)
 	Function::blocks->insert(block);
 }
 
-void Function::reset_cycles()
+bool Function::isLoop()
 {
-	cycles = 0;
+	return Function::looping;
 }
 
 void Function::play()
 {
 	cout << "Function " << getID() << " plays" << endl;
+	cout << "Function " << getID() << " contains " << *getCycles() << " cycles" << endl;
 	string type;
 	vector<trainedBlock*> toDelete;
 
-	int ncycles = getCycles();
+	int ncycles = *getCycles();
 
 	for (auto it : *blocks)
 	{
@@ -85,7 +74,16 @@ void Function::play()
 		blocks->erase(it);
 	}
 
-
+	
+	while (looping)
+	{
+		for (auto it : *blocks)
+		{
+			it->play();
+		}
+	}
+	
+	
 	for (int j = 0; j < ncycles; j++)
 	{
 		for (auto it : *blocks)
@@ -93,6 +91,7 @@ void Function::play()
 			it->play();
 		}
 	}
+	
 }
 
 cv::Rect2f Function::findRange(cv::Point2f br)
@@ -116,6 +115,8 @@ void Function::printRange(cv::Mat cameraFeed)
 
 void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblocks)
 {
+	if (isAReference()) return;
+
 	cv::Rect2f range = findRange(br);
 	cv::Point2f block_center;
 
@@ -137,6 +138,10 @@ void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblo
 
 void Function::countCycles(cv::Mat threshold_plus)
 {
+	if (isAReference()) return; //if is a reference block it must not recount its cycles since they are already defined in the block that its referencing
+
+	setLoop(false);
+
 	cv::Mat temp, canny_out;
 	cv::Rect range = getRange();
 
@@ -153,37 +158,67 @@ void Function::countCycles(cv::Mat threshold_plus)
 		Canny(temp, canny_out, 0, 50, 5);
 		//imshow("Canny", canny_out);
 
-
 		//find contours of filtered image using openCV findContours function
 		findContours(canny_out, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+		//contoursConvexHull(contours);
+
+		cv::RNG rng(12345);
+		
+		/// Draw contours
+		cv::Mat drawing = cv::Mat::zeros(canny_out.size(), CV_8UC3);
+		for (size_t i = 0; i < contours.size(); ++i)
+		{
+			cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+			//drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+			drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, cv::Point());
+		}
+
+		/// Show in a window
+		cv::namedWindow("Contours", cv::WINDOW_AUTOSIZE);
+		imshow("Contours", drawing);
+
 
 		int index = 0;
 		int xPos, yPos;
 
-		for (; index >= 0; index = hierarchy[index][0])
+		if (hierarchy.size() > 0)
 		{
-			cv::Moments moment = moments((cv::Mat)contours[index]);
-			double area = moment.m00;
-
-			if (area > 10 * 10)
+			for (; index >= 0; index = hierarchy[index][0])
 			{
-				xPos = moment.m10 / area;
-				yPos = moment.m01 / area;
+				cv::Moments moment = moments((cv::Mat)contours[index]);
+				double area = moment.m00;
 
-				cv::Point plusPosition = cv::Point(xPos, yPos);
+				cout << "Area: " << area << endl;
 
-				//circle(cameraFeed, plusPosition, 10, cv::Scalar(0, 255, 0));
-
-				if (range.contains(plusPosition)) //rect for plus blocks
+				if (area > 10 * 10)
 				{
-					incrementCycles(1);
-				}
-			}
 
+					xPos = moment.m10 / area;
+					yPos = moment.m01 / area;
+
+					cv::Point blockPosition = cv::Point(xPos, yPos);
+
+					//circle(cameraFeed, plusPosition, 10, cv::Scalar(0, 255, 0));
+
+					if (range.contains(blockPosition)) //rect for plus blocks
+					{
+						if (area < 30 * 30) //black token block has an area of approximately 620px
+						{
+							incrementCycles();
+						}
+
+						else //infinite loop block has an area of approximately 2000px
+						{
+							cout << "Loop found" << endl;
+							setLoop(true);
+						}
+					}
+				}
+
+			}
 		}
 	}
-
-	cout << "Function " << getID() << " contains " << getCycles() << " cycles" << endl;
+	
 }
 
 

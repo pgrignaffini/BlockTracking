@@ -12,7 +12,7 @@ trainedBlocks::~trainedBlocks()
 }
 
 
-trainedBlock * trainedBlocks::update(BlockDetector * detector, int XPos, int YPos, vector<vector<cv::Point>> contours, int index)
+trainedBlock * trainedBlocks::update(BlockDetector * detector, ConfigurationManager* config, int XPos, int YPos, vector<vector<cv::Point>> contours, int index)
 {
 	trainedBlock* tb = new trainedBlock();
 	vector<std::vector<cv::Point2f>> corners = detector->getIdentifiedCorners();
@@ -29,7 +29,7 @@ trainedBlock * trainedBlocks::update(BlockDetector * detector, int XPos, int YPo
 		found->second->setXPos(XPos);
 		found->second->setYPos(YPos);
 
-		if (!found->second->isTrained())
+		if (!found->second->isTrained()) //training
 		{
 			type = detector->detectType(contours, index);
 			found->second->addType(type);
@@ -41,22 +41,26 @@ trainedBlock * trainedBlocks::update(BlockDetector * detector, int XPos, int YPo
 			if (type == "note")
 			{
 				Note* note = new Note(*found->second);
+				note->setUpConf(config); //set configuration file
+				delete(found->second); //delete pointed element
 				found->second = note;
 			}
 
 			else if (type == "variable")
 			{
 				Variable* var = new Variable(*found->second);
+				delete(found->second);
 				found->second = var;
 			}
 
 			else if (type == "function")
 			{
 				Function* func = new Function(*found->second);
+				delete(found->second);
 				found->second = func;
 			}
 
-			found->second->defined = true;
+			found->second->setDefined(true);
 		}
 
 		return found->second;
@@ -66,7 +70,7 @@ trainedBlock * trainedBlocks::update(BlockDetector * detector, int XPos, int YPo
 	{
 		cout << "New block found: " << id << endl;
 
-		tb = setCorrespondingBlock(id, this->tBlocks, tb);
+		tb = setCorrespondingBlock(id, this->tBlocks, tb, config);
 
 		tb->setXPos(XPos);
 		tb->setYPos(YPos);
@@ -84,11 +88,22 @@ trainedBlock * trainedBlocks::update(BlockDetector * detector, int XPos, int YPo
 
 }
 
-trainedBlock * trainedBlocks::setCorrespondingBlock(int id, unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* tb)
+trainedBlock * trainedBlocks::setCorrespondingBlock(int id, unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* tb, ConfigurationManager* config)
 {
-	unordered_map<int, trainedBlock*>::iterator found;
 	int to_find;
+	std::vector<int> depsOf;
+	std::vector<int>::iterator thisBlock;
 
+	depsOf = config->getDepsOf(id);
+	
+	if (depsOf.size() > 0)
+	{
+		thisBlock = std::find(depsOf.begin(), depsOf.end(), id);
+		depsOf.erase(thisBlock); //remove element to avoid circular dependencies
+		//depsOf contains the ids linked to the block in consideration
+	}
+
+	/*
 	switch (id)
 	{
 		case 40: to_find = 46; break; //var 1
@@ -102,16 +117,23 @@ trainedBlock * trainedBlocks::setCorrespondingBlock(int id, unordered_map<int, t
 		case 23: to_find = 39; break; //fun 3
 		case 39: to_find = 23; break; //fun 3
 		default: break;
-	}
+	}*/
 
-	found = this->tBlocks.find(to_find);
-
-	if (found != this->tBlocks.end())
+	unordered_map<int, trainedBlock*>::iterator found;
+	for (int i = 0; i < depsOf.size(); i++)
 	{
-		tb->setBlocks(found->second->getBlocks());
-		tb->setType(found->second->getType());
-		tb->trained = found->second->isTrained();
-		tb->setCycles(found->second->getCycles());
+		found = this->tBlocks.find(depsOf[i]);
+		 
+		if (found != this->tBlocks.end() && !found->second->isAReference())
+		{
+			tb->setBlocks(found->second->getBlocks()); //assign the pointer to the vector
+			tb->setType(found->second->getType());
+			tb->setTrained(found->second->isTrained());
+			tb->setCycles(found->second->getCycles()); //assign an integer pointer
+			tb->setReference(true); //the new block is a reference to another one
+			break;
+		}
+
 	}
 
 	return tb;

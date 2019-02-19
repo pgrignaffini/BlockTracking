@@ -1,6 +1,7 @@
 #pragma once
 class Board
 {
+
 public:
 	Board();
 	~Board();
@@ -41,7 +42,6 @@ private:
 	std::vector<std::vector<cv::Point>> board_contours;
 	std::vector<cv::Vec4i> board_hierarchy;
 	cv::Point2f* rectpoints;
-
 	std::vector<cv::Point> contoursConvexHull(std::vector<std::vector<cv::Point>> contours);
 
 };

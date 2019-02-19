@@ -1,29 +1,12 @@
 #include "stdafx.h"
 #include "SoundManager.h"
 
-void SoundManager::playSound(char note)
+void SoundManager::playSound(const std::string& filename)
 {
 	// Load a sound buffer from a wav file
 	sf::SoundBuffer buffer;
-	std::string file;
 
-	switch (note)
-	{
-
-		case 'a': file = "res/sounds/PianoNotes/a1.wav"; break;
-		case 'b': file = "res/sounds/PianoNotes/b1.wav"; break;
-		case 'c': file = "res/sounds/PianoNotes/c1.wav"; break;
-		case 'd': file = "res/sounds/PianoNotes/d1.wav"; break;
-		case 'e': file = "res/sounds/PianoNotes/e1.wav"; break;
-		case 'f': file = "res/sounds/PianoNotes/f1.wav"; break;
-		case 'g': file = "res/sounds/PianoNotes/g1.wav"; break;
-
-		default:file = "res/sounds/error.wav";
-		break;
-	}
-
-
-	if (!buffer.loadFromFile(file))
+	if (!buffer.loadFromFile(filename))
 		return;
 
 	// Display sound informations
@@ -36,17 +19,20 @@ void SoundManager::playSound(char note)
 	sf::Sound sound(buffer);
 	sound.play();
 
+	//std::stringstream ss;
+	//ss << "\rPlaying  " << filename << std::endl;
+
+
 	// Loop while the sound is playing
 	while (sound.getStatus() == sf::Sound::Playing)
 	{
 		// Leave some CPU time for other processes
-		sf::sleep(sf::milliseconds(100));
-
+		//sf::sleep(sf::milliseconds(100));
 		// Display the playing position
-		std::cout << "\rPlaying... " << sound.getPlayingOffset().asSeconds() << " sec        ";
-		std::cout << std::flush;
+		
 	}
-	std::cout << std::endl << std::endl;
+
+	//std::cout << ss.str();
 }
 
 

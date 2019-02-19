@@ -1,19 +1,22 @@
 #include "stdafx.h"
 #include "trainedBlock.h"
 
-trainedBlock::trainedBlock()
+trainedBlock::trainedBlock() : Block()
 {
-	Block();
 	trained = false;
 	defined = false;
+	reference = false;
+
 	count = 0;
+
 	type_list["variable"] = 0;
-	type_list["bracket"] = 0;
 	type_list["function"] = 0;
 	type_list["note"] = 0;
-	type_list["break"] = 0;
+	//type_list["bracket"] = 0;
+	//type_list["break"] = 0;
 
 	blocks = new set<trainedBlock*, xDecr>();
+	cycles = new int(0);
 }
 
 trainedBlock::~trainedBlock()
@@ -30,12 +33,15 @@ trainedBlock::trainedBlock(const trainedBlock & _block)
 	setHSVmin(_block.getHSVmin());
 	setHSVmax(_block.getHSVmax());
 	setBlocks(_block.getBlocks());
+	setCycles(_block.getCycles());
 
-	trained = _block.isTrained();
-	defined = _block.isDefined();
+	setTrained(_block.isTrained());
+	setDefined(_block.isDefined());
+	setReference(_block.isAReference());
+
+
 	type_list = _block.type_list;
 	count = 0;
-	cycles = 0;
 }
 
 void trainedBlock::setBlocks(set<trainedBlock*, xDecr>* _blocks)
@@ -43,9 +49,19 @@ void trainedBlock::setBlocks(set<trainedBlock*, xDecr>* _blocks)
 	trainedBlock::blocks = _blocks;
 }
 
-void trainedBlock::setCycles(int _cycles)
+void trainedBlock::setDefined(bool def)
 {
-	cycles = _cycles;
+	trainedBlock::defined = def;
+}
+
+void trainedBlock::setTrained(bool train)
+{
+	trainedBlock::trained = train;
+}
+
+void trainedBlock::setReference(bool ref)
+{
+	trainedBlock::reference = ref;
 }
 
 bool trainedBlock::isTrained() const
@@ -58,16 +74,39 @@ bool trainedBlock::isDefined() const
 	return trainedBlock::defined;
 }
 
-int trainedBlock::getCycles() const
+
+bool trainedBlock::isAReference() const
+{
+	return trainedBlock::reference;
+}
+
+int* trainedBlock::getCycles() const
 {
 	return trainedBlock::cycles;
 }
+
+void trainedBlock::setCycles(int* _cycles)
+{
+	trainedBlock::cycles = _cycles;
+}
+
+void trainedBlock::reset_cycles()
+{
+	*cycles = 0;
+}
+
+void trainedBlock::incrementCycles()
+{
+	(*cycles)++;
+}
+
 
 void trainedBlock::addType(string t)
 {
 	if (t.empty()) return;
 
-	setType(t); //overwrite 'X'
+	//setType(t); //overwrite 'X'
+	
 	type_list[t]+=1;
 	count+=1;
 
@@ -97,6 +136,7 @@ string trainedBlock::max(unordered_map<string, int> list)
 
 	return max_index;
 }
+
 
 void trainedBlock::play()
 {

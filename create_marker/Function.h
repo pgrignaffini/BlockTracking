@@ -8,8 +8,7 @@ class Function : public trainedBlock
 
 private:
 	cv::Rect2f range;
-	int cycles;
-	bool defined;
+	bool looping;
 
 public:
 	Function();
@@ -17,16 +16,16 @@ public:
 
 	Function(const trainedBlock &b);
 
-	int getCycles();
+	
 	cv::Rect2f getRange();
-	bool isDefined();
 
 	void setBlocks(set<trainedBlock*, xDecr>* _blocks);
 	void setRange(cv::Rect2f _range);
+	void setLoop(bool isLoop);
 	
-	void incrementCycles(int n);
 	void addBlock(trainedBlock* block);
-	void reset_cycles();
+
+	bool isLoop();
 	 
 	void play() override;
 	cv::Rect2f findRange(cv::Point2f br) override;

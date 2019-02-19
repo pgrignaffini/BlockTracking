@@ -1,8 +1,6 @@
 #pragma once
 #include "Note.h"
 
-
-
 class Variable : public trainedBlock
 {
 
@@ -16,7 +14,6 @@ public:
 	Variable(const trainedBlock &n);
 
 	cv::Rect2f getRange();
-	bool isDefined();
 
 	void setNotes(set<trainedBlock*, xDecr>* _notes);
 	void setRange(cv::Rect2f _range);

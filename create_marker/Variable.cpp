@@ -14,7 +14,6 @@ Variable::~Variable()
 Variable::Variable(const trainedBlock& n) : trainedBlock(n)
 {
 	range = cv::Rect2f();
-	defined = false;
 }
 
 
@@ -26,11 +25,6 @@ set<trainedBlock*, xDecr>* Variable::getBlocks() const
 cv::Rect2f Variable::getRange()
 {
 	return Variable::range;
-}
-
-bool Variable::isDefined()
-{
-	return Variable::defined;
 }
 
 void Variable::setNotes(set<trainedBlock*, xDecr>* _notes)
@@ -69,6 +63,8 @@ void Variable::printRange(cv::Mat cameraFeed)
 
 void Variable::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblocks)
 {
+	if (isAReference()) return;
+
 	cv::Rect2f range = findRange(br);
 	setRange(range);
 
