@@ -1,3 +1,4 @@
+#pragma once
 #include "stdafx.h"
 #include "Function.h"
 
@@ -52,7 +53,7 @@ bool Function::isLoop()
 	return Function::looping;
 }
 
-void Function::play()
+int Function::play(int channel)
 {
 	cout << "Function " << getID() << " plays" << endl;
 	cout << "Function " << getID() << " contains " << *getCycles() << " cycles" << endl;
@@ -79,18 +80,21 @@ void Function::play()
 	{
 		for (auto it : *blocks)
 		{
-			it->play();
+			it->play(channel);
+			while (Mix_Playing(channel)) {} //wait for the sound to finish playing before playing another one
 		}
 	}
-	
 	
 	for (int j = 0; j < ncycles; j++)
 	{
 		for (auto it : *blocks)
 		{
-			it->play();
+			it->play(channel);
+			while(Mix_Playing(channel)) {} //wait for the sound to finish playing before playing another one
 		}
 	}
+
+	return channel;
 	
 }
 
@@ -188,7 +192,7 @@ void Function::countCycles(cv::Mat threshold_plus)
 				cv::Moments moment = moments((cv::Mat)contours[index]);
 				double area = moment.m00;
 
-				cout << "Area: " << area << endl;
+				//cout << "Area: " << area << endl;
 
 				if (area > 10 * 10)
 				{

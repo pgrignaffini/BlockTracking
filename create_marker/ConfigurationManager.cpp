@@ -1,6 +1,6 @@
+#pragma once
 #include "stdafx.h"
 #include "ConfigurationManager.h"
-
 
 ConfigurationManager::ConfigurationManager(std::string conf)
 {
@@ -139,7 +139,7 @@ std::string ConfigurationManager::getDepsFile()
 	return ConfigurationManager::depsFile;
 }
 
-std::string ConfigurationManager::getAudio(int id)
+std::string ConfigurationManager::getAudio(int id) 
 {
 	std::string sound;
 	std::unordered_map<int, std::string>::iterator found;

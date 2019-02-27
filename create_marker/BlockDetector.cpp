@@ -1,3 +1,4 @@
+#pragma once
 #include "stdafx.h"
 #include "BlockDetector.h"
 
@@ -6,9 +7,7 @@ using namespace cv;
 
 BlockDetector::BlockDetector()
 {
-	calibrationSquareDimension = 0.026f; //meters = 2.6cm
-	arucoSquareDimension = 0.015f; // 1.5cm
-	chessboardDimensions = cv::Size(6, 9); //number of intersection points on the chessboard
+	feed = new CameraCalibration();
 }
 
 BlockDetector::~BlockDetector()
@@ -17,20 +16,6 @@ BlockDetector::~BlockDetector()
 
 //Getters
 
-float BlockDetector::getCalibrationSquareDimension()
-{
-	return BlockDetector::calibrationSquareDimension;
-}
-
-float BlockDetector::getArucoSquareDimension()
-{
-	return BlockDetector::arucoSquareDimension;
-}
-
-cv::Size BlockDetector::getChessboardDimensions()
-{
-	return BlockDetector::chessboardDimensions;
-}
 
 std::vector<int> BlockDetector::getIDs()
 {
@@ -42,23 +27,13 @@ vector<vector<Point2f>> BlockDetector::getIdentifiedCorners()
 	return BlockDetector::markerCorners;
 }
 
+cv::Rect BlockDetector::getBLine()
+{
+	return BlockDetector::bline;
+}
+
 
 //Setters
-
-void BlockDetector::setCalibrationSquareDimension(float calib)
-{
-	BlockDetector::calibrationSquareDimension = calib;
-}
-
-void BlockDetector::setArucoSquareDimension(float aruc)
-{
-	BlockDetector::arucoSquareDimension = aruc;
-}
-
-void BlockDetector::setChessboardDimensions(cv::Size size)
-{
-	BlockDetector::chessboardDimensions = size;
-}
 
 void BlockDetector::setIDs(vector<int> ids)
 {
@@ -69,6 +44,11 @@ void BlockDetector::setIDs(vector<int> ids)
 void BlockDetector::setCorners(std::vector<std::vector<cv::Point2f>> corners)
 {
 	BlockDetector::markerCorners = corners;
+}
+
+void BlockDetector::setBLine(cv::Rect _bline)
+{
+	BlockDetector::bline = _bline;
 }
 
 //Utilities
@@ -82,225 +62,7 @@ double BlockDetector::angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 	return (dx1*dx2 + dy1*dy2) / sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 }
 
-void BlockDetector::createArucoMarkers()
-{
-	Mat outputMarker;
-	Ptr<aruco::Dictionary> markerDictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME::DICT_4X4_50);
-	//create markers and print them in a file
-	// 1 pixel = 0.26 mm
-	//square block = 2cm => 75 pixel
-	for (int i = 0; i < 50; i++)
-	{
-		aruco::drawMarker(markerDictionary, i, 500, outputMarker, 1);
-		ostringstream convert;
-		string imageName = "4x4Marker_";
-		convert << imageName << i << ".jpg";
-		imwrite(convert.str(), outputMarker);
-	}
-}
-
-void BlockDetector::createKnownBoardPosition(cv::Size boardSize, float squareEdgeLength, std::vector<cv::Point3f>& corners)
-{
-	for (int i = 0; i < boardSize.height; i++)
-	{
-		for (int j = 0; j < boardSize.width; j++)
-		{
-			corners.push_back(Point3f(j * squareEdgeLength, i * squareEdgeLength, 0.0f));
-		}
-	}
-}
-
-void BlockDetector::getChessboardCorners(std::vector<cv::Mat> images, std::vector<std::vector<cv::Point2f>>& allFoundCorners, bool showResults)
-{
-	for (vector<Mat>::iterator iter = images.begin(); iter != images.end(); iter++)
-	{
-		vector<Point2f> pointBuf; //buffer to store all the corners
-		bool found = findChessboardCorners(*iter, chessboardDimensions, pointBuf, CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_NORMALIZE_IMAGE);
-
-		if (found)	allFoundCorners.push_back(pointBuf);
-
-		if (showResults)
-		{
-			drawChessboardCorners(*iter, Size(6, 9), pointBuf, found);
-			imshow("Looking for corners", *iter);
-			waitKey(0);
-		}
-	}
-}
-
-void BlockDetector::camera_calibration(std::vector<cv::Mat> calibrationImages, cv::Size boardSize, float squareEdgeLength, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients)
-{
-	vector<vector<Point2f>> checkerboardImageSpacePoints;
-	getChessboardCorners(calibrationImages, checkerboardImageSpacePoints, false);
-
-	vector<vector<Point3f>> worldSpaceCornerPoints(1);
-
-	createKnownBoardPosition(boardSize, squareEdgeLength, worldSpaceCornerPoints[0]);
-
-	worldSpaceCornerPoints.resize(checkerboardImageSpacePoints.size(), worldSpaceCornerPoints[0]);
-
-	vector<Mat> rVectors, tVectors;
-	distanceCoefficients = Mat::zeros(8, 1, CV_64F);
-
-	calibrateCamera(worldSpaceCornerPoints, checkerboardImageSpacePoints, boardSize, cameraMatrix, distanceCoefficients, rVectors, tVectors);
-}
-
-bool BlockDetector::saveCameraCalibration(std::string name, cv::Mat cameraMatrix, cv::Mat distanceCoefficients)
-{
-	ofstream outStream(name);
-	if (outStream)
-	{
-		uint16_t rows = cameraMatrix.rows;
-		uint16_t columns = cameraMatrix.cols;
-
-		outStream << rows << endl;
-		outStream << columns << endl;
-
-		for (int r = 0; r < rows; r++)
-		{
-			for (int c = 0; c < columns; c++)
-			{
-				double value = cameraMatrix.at<double>(r, c);
-				outStream << value << endl;
-			}
-		}
-
-		rows = distanceCoefficients.rows;
-		columns = distanceCoefficients.cols;
-
-		outStream << rows << endl;
-		outStream << columns << endl;
-
-		for (int r = 0; r < rows; r++)
-		{
-			for (int c = 0; c < columns; c++)
-			{
-				double value = distanceCoefficients.at<double>(r, c);
-				outStream << value << endl;
-			}
-		}
-
-		outStream.close();
-		return true;
-	}
-
-	return false;
-}
-
-bool BlockDetector::loadCameraCalibration(std::string name, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients)
-{
-	ifstream instream(name);
-	if (instream)
-	{
-		uint16_t rows;
-		uint16_t columns;
-
-		instream >> rows;
-		instream >> columns;
-
-		cameraMatrix = Mat(Size(columns, rows), CV_64F);
-
-		for (int r = 0; r < rows; r++)
-		{
-			for (int c = 0; c < columns; c++)
-			{
-				double read = 0.0;
-				instream >> read;
-				cameraMatrix.at<double>(r, c) = read;
-				//cout << cameraMatrix.at<double>(r, c) << "\n";
-			}
-		}
-
-		//Distance Coefficients
-		instream >> rows;
-		instream >> columns;
-
-		distanceCoefficients = Mat::zeros(rows, columns, CV_64F);
-
-		for (int r = 0; r < rows; r++)
-		{
-			for (int c = 0; c < columns; c++)
-			{
-				double read = 0.0;
-				instream >> read;
-				distanceCoefficients.at<double>(r, c) = read;
-				//cout << distanceCoefficients.at<double>(r, c) << "\n";
-			}
-		}
-
-		instream.close();
-		return true;
-
-	}
-
-	return false;
-}
-
-void BlockDetector::cameraCalibrationProcess(cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients)
-{
-	Mat frame;
-	Mat drawToFrame;
-	vector<Mat> savedImages;
-	vector<vector<Point2f>> markerCorners, rejectedCandidates;
-
-	VideoCapture vid(0);
-
-	if (!vid.isOpened()) return;
-
-	int framesPerSecond = 40;
-	namedWindow("Webcam", WINDOW_AUTOSIZE);
-
-	while (true)
-	{
-		if (!vid.read(frame)) break;
-
-		vector<Vec2f> foundPoints;
-		bool found = false;
-
-		//found = findChessboardCorners(frame, chessboardDimensions, foundPoints, CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_NORMALIZE_IMAGE | CALIB_CB_FAST_CHECK);
-		found = findChessboardCorners(frame, chessboardDimensions, foundPoints, CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_NORMALIZE_IMAGE);
-		frame.copyTo(drawToFrame);
-		drawChessboardCorners(drawToFrame, chessboardDimensions, foundPoints, found);
-
-		if (found)
-		{
-			imshow("Webcam", drawToFrame);
-		}
-
-		else
-		{
-			imshow("Webcam", frame);
-		}
-
-		char character = waitKey(1000 / framesPerSecond); //waitKey returns the pressed key
-
-		switch (character)
-		{
-		case ' ':
-			//saving image
-			if (found)
-			{
-				Mat temp;
-				frame.copyTo(temp);
-				savedImages.push_back(temp);
-			}
-			break;
-		case 13:
-			//enter button
-			//calibration
-			if (savedImages.size() > 15)
-			{
-				camera_calibration(savedImages, chessboardDimensions, calibrationSquareDimension, cameraMatrix, distanceCoefficients);
-				saveCameraCalibration("Calibration", cameraMatrix, distanceCoefficients);
-			}
-			break;
-		case 27:
-			//esc button
-			//exit
-			return;
-		}
-	}
-}
+//Core functionalities
 
 void BlockDetector::findCorners(Mat& cameraFeed)
 {
@@ -317,7 +79,7 @@ void BlockDetector::findCorners(Mat& cameraFeed)
 
 	aruco::detectMarkers(cameraFeed, markerDictionary, corners, markerIdentifiers);
 	//for (int i = 0; i < markerIdentifiers.size(); i++) cout << markerIdentifiers.at(i) << " ";
-	aruco::estimatePoseSingleMarkers(corners, getArucoSquareDimension(), cameraMatrix, distanceCoefficients, rotationVectors, translationVectors);
+	aruco::estimatePoseSingleMarkers(corners, feed->getArucoSquareDimension(), cameraMatrix, distanceCoefficients, rotationVectors, translationVectors);
 	aruco::drawDetectedMarkers(cameraFeed, corners, markerIdentifiers); //show IDs
 
 	setIDs(markerIdentifiers);
@@ -406,6 +168,192 @@ string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, 
 	return block_type;
 }
 
+trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks, ConfigurationManager* config, int XPos, int YPos, vector<vector<cv::Point>> contours, int index)
+{
+	trainedBlock* tb = new trainedBlock();
+	vector<std::vector<cv::Point2f>> corners = getIdentifiedCorners();
+	vector<int> ids = getIDs();
+
+	int id = findIdentifier(corners, ids, XPos, YPos);
+	string type;
+	cv::Point center;
+
+	//look if the block has been already inserted
+	unordered_map<int, trainedBlock*>::iterator found = tBlocks.find(id);
+
+	if (found != tBlocks.end()) //block already identified
+	{
+		found->second->setXPos(XPos);
+		found->second->setYPos(YPos);
+
+		center = cv::Point(XPos, YPos);
+
+		//set property for blocks positioned on the last line
+		if (bline.contains(center)) found->second->setLastLine(true);
+
+		if (!found->second->isTrained()) //training
+		{
+			type = detectType(contours, index);
+			found->second->addType(type);
+		}
+
+		else if (found->second->isTrained() && !found->second->isDefined()) //cast to correct type after training
+		{
+			type = found->second->getType();
+			if (type == "note")
+			{
+				Note* note = new Note(*found->second);
+				note->setUpConf(config); //set configuration file
+				delete(found->second); //delete pointed element
+				found->second = note;
+			}
+			/*
+			else if (type == "variable")
+			{
+				Variable* var = new Variable(*found->second);
+				delete(found->second);
+				found->second = var;
+			}*/
+
+			else if (type == "function")
+			{
+				Function* func = new Function(*found->second);
+				delete(found->second);
+				found->second = func;
+			}
+
+			found->second->setDefined(true);
+		}
+
+		return found->second;
+	}
+
+	else if (id != -1) // block not yet registered, it has an ID (aruco marker) but no type
+	{
+		cout << "New block found: " << id << endl;
+
+		tb = setCorrespondingBlock(id, tBlocks, tb, config);
+
+		tb->setXPos(XPos);
+		tb->setYPos(YPos);
+		tb->setID(id);
+
+		type = detectType(contours, index);
+		tb->addType(type);
+
+		tBlocks.insert({ id, tb }); //insert new pair value
+
+		return tb;
+	}
+
+	else return nullptr;
+
+}
+
+trainedBlock * BlockDetector::setCorrespondingBlock(int id, unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* tb, ConfigurationManager* config)
+{
+	int to_find;
+	std::vector<int> depsOf;
+	std::vector<int>::iterator thisBlock;
+
+	depsOf = config->getDepsOf(id);
+
+	if (depsOf.size() > 0)
+	{
+		thisBlock = std::find(depsOf.begin(), depsOf.end(), id);
+		depsOf.erase(thisBlock); //remove element to avoid circular dependencies
+		//depsOf contains the ids linked to the block in consideration
+	}
+
+	unordered_map<int, trainedBlock*>::iterator found;
+	for (int i = 0; i < depsOf.size(); i++)
+	{
+		found = tBlocks.find(depsOf[i]);
+
+		if (found != tBlocks.end() && !found->second->isAReference())
+		{
+			tb->setBlocks(found->second->getBlocks()); //assign the pointer to the vector
+			tb->setType(found->second->getType());
+			tb->setTrained(found->second->isTrained());
+			tb->setCycles(found->second->getCycles()); //assign an integer pointer
+			tb->setReference(true); //the new block found is a reference to another one, dependencies are specified in "conf/deps.txt"
+			break;
+		}
+
+	}
+
+	return tb;
+}
+
+
+trainedBlock* BlockDetector::findObject(cv::Mat threshold, std::unordered_map<int, trainedBlock*>& tBlocks, ConfigurationManager* config)
+{
+	trainedBlock* aBlock = new trainedBlock();
+	//use moments method to find our filtered object
+	cv::Mat temp, canny_out;
+	std::vector<cv::Vec4i> hierarchy;
+	std::vector<vector<cv::Point>> contours;
+
+	threshold.copyTo(temp);
+	//Canny(temp, canny_out, thresh, thresh * 2, 3);
+	Canny(temp, canny_out, 0, 50, 5);
+
+	//find contours of filtered image using openCV findContours function
+	findContours(canny_out, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+	double refArea = 0;
+
+
+	if (hierarchy.size() > 0)
+	{
+		int numObjects = hierarchy.size();
+		//cout << "Objects detected: " << numObjects << endl;
+		//if number of objects greater than MAX_NUM_OBJECTS we have a noisy filter
+		if (numObjects < MAX_NUM_OBJECTS)
+		{
+			int index = 0;
+			for (; index >= 0; index = hierarchy[index][0])
+			{
+
+				cv::Moments moment = moments((cv::Mat)contours[index]);
+				double area = moment.m00;
+
+				//if the area is less than 20 px by 20px then it is probably just noise
+				//if the area is the same as the 3/2 of the image size, probably just a bad filter
+				//we only want the object with the largest area so we safe a reference area each
+				//iteration and compare it to the area in the next iteration.
+
+				if (area > MIN_OBJECT_AREA)
+				{
+					try
+					{
+
+						int X = moment.m10 / area;
+						int Y = moment.m01 / area;
+
+						//returns the current block with the identifier
+						//if it already exists returns a pointer to that block
+						//if it doesn't already exist it inserts it in trainedBlocks
+						//the function also updates the current block position and trains the block
+						aBlock = update(tBlocks, config, X, Y, contours, index);
+
+						if (aBlock == nullptr) return aBlock;
+
+						
+					}
+					catch (exception& e)
+					{
+						std::cout << "Something went wrong: " << e.what() << '\n';
+					}
+				}
+
+			}
+		}
+	}
+
+	return aBlock;
+}
+
 //this function identifies the right marker ID to assign to the block in consideration, the point <xm,ym> represents its center
 int BlockDetector::findIdentifier(InputArrayOfArrays _corners, InputArray _ids, int xm, int ym)
 {
@@ -482,4 +430,44 @@ void BlockDetector::check_for_changes(unordered_map<int, trainedBlock*>& tBlocks
 
 	return;
 
+}
+
+void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat &cameraFeed, ConfigurationManager* config, unordered_map<int, trainedBlock*>& tBlocks)
+{
+	//cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
+	//cv::Mat distanceCoefficients;
+	//these two vectors needed for output of findContours
+	bool objectFound;
+
+	findCorners(cameraFeed);
+	trainedBlock* blockFound = findObject(threshold, tBlocks, config);
+
+	if (blockFound != nullptr) objectFound = true;
+	else objectFound = false;
+
+	/*
+	/// Draw contours
+	Mat drawing = Mat::zeros(canny_out.size(), CV_8UC3);
+	for (size_t i = 0; i < contours.size(); ++i)
+	{
+		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+		//drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+		drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+	}*/
+
+	/// Show in a window
+	//namedWindow("Contours", WINDOW_AUTOSIZE);
+	//imshow("Contours", drawing);
+
+	//erase blocks no longer on board
+	check_for_changes(tBlocks);
+
+
+	cout << "Identified Blocks: ";
+	for (auto& it : tBlocks) cout << it.first << " ";
+	cout << endl;
+
+	if (!objectFound) putText(cameraFeed, "TOO MUCH NOISE! ADJUST FILTER", cv::Point(0, 50), 1, 2, cv::Scalar(0, 0, 255), 2);
+
+	return;
 }

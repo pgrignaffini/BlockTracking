@@ -1,0 +1,3 @@
+0:res/sounds/GuitarChords/GuitarChords1.wav
+1:res/sounds/GuitarChords/GuitarChords2.wav
+2:res/sounds/GuitarChords/GuitarChords3.wav

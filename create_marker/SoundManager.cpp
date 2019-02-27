@@ -44,14 +44,14 @@ void SoundManager::playMusic(const std::string& filename)
 {
 	// Load an ogg music file
 	sf::Music music;
-	if (!music.openFromFile("resources/" + filename))
+	if (!music.openFromFile(filename))
 		return;
 
 	// Display music informations
 	std::cout << filename << ":" << std::endl;
-	std::cout << " " << music.getDuration().asSeconds() << " seconds" << std::endl;
-	std::cout << " " << music.getSampleRate() << " samples / sec" << std::endl;
-	std::cout << " " << music.getChannelCount() << " channels" << std::endl;
+	//std::cout << " " << music.getDuration().asSeconds() << " seconds" << std::endl;
+	//std::cout << " " << music.getSampleRate() << " samples / sec" << std::endl;
+	//std::cout << " " << music.getChannelCount() << " channels" << std::endl;
 
 	// Play it
 	music.play();
@@ -60,11 +60,11 @@ void SoundManager::playMusic(const std::string& filename)
 	while (music.getStatus() == sf::Music::Playing)
 	{
 		// Leave some CPU time for other processes
-		sf::sleep(sf::milliseconds(100));
+		//sf::sleep(sf::milliseconds(100));
 
 		// Display the playing position
-		std::cout << "\rPlaying... " << music.getPlayingOffset().asSeconds() << " sec        ";
-		std::cout << std::flush;
+		//std::cout << "\rPlaying... " << music.getPlayingOffset().asSeconds() << " sec        ";
+		//std::cout << std::flush;
 	}
 	std::cout << std::endl << std::endl;
 }

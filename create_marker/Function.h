@@ -1,7 +1,6 @@
 #pragma once
 #include "trainedBlock.h"
-#include "Note.h"
-#include "Variable.h"
+#include <SDL_mixer.h>
 
 class Function : public trainedBlock
 {
@@ -27,7 +26,7 @@ public:
 
 	bool isLoop();
 	 
-	void play() override;
+	int play(int channel)override;
 	cv::Rect2f findRange(cv::Point2f br) override;
 	void printRange(cv::Mat cameraFeed) override;
 	void findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblocks) override;

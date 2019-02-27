@@ -1,6 +1,6 @@
+#pragma once
 #include "stdafx.h"
 #include "Block.h"
-
 
 Block::Block()
 {
@@ -19,7 +19,11 @@ Block::Block()
 	setType("X");
 }
 
-void Block::play()
+void Block::playSync()
+{
+}
+
+void Block::playASync()
 {
 }
 

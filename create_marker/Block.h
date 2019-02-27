@@ -13,7 +13,8 @@ class Block
 	Block();
 	virtual ~Block() = default; //polymorphic
 
-	virtual void play();
+	virtual void playSync();
+	virtual void playASync();
 
 	Block(string type);
 	Block(const Block &_block);

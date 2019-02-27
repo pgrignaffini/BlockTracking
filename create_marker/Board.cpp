@@ -1,14 +1,11 @@
+#pragma once
 #include "stdafx.h"
 #include "Board.h"
 
-
 Board::Board()
 {
-	setHSVmin(cv::Scalar(44, 0, 0)); //gray
-	setHSVmax(cv::Scalar(256, 40, 256)); //gray
-
-	//setHSVmin(cv::Scalar(54, 58, 26)); //green
-	//setHSVmax(cv::Scalar(100, 256, 256)) //green
+	setHSVmin(cv::Scalar(50, 0, 100)); //gray
+	setHSVmax(cv::Scalar(256, 256, 256)); //gray
 }
 
 
@@ -142,8 +139,15 @@ void Board::identifyBoard(cv::Mat threshold_board)
 		setTop_left_corner(topleft);
 		setTop_right_corner(topright);
 
+		cv::Point bline_topleft = bottomleft;
+		bline_topleft.y += 65; //last line height
+
+		cv::Rect bline = cv::Rect(bline_topleft, bottomright);
+		setBottom_line(bline);
+		//cv::rectangle(window, bline, cv::Scalar(0, 0, 255), 4);
 		//display window with board
 		//printBoard(threshold_board);
+		return;
 
 	}
 }
@@ -195,6 +199,11 @@ cv::Point2f * Board::getRectPoints()
 	return Board::rectpoints;
 }
 
+cv::Rect Board::getBottomLine()
+{
+	return Board::bottom_line;
+}
+
 void Board::setHSVmin(cv::Scalar _hsvmin)
 {
 	Board::HSVmin = _hsvmin;
@@ -213,6 +222,11 @@ void Board::setBottom_right_corner(cv::Point br)
 void Board::setBottom_left_corner(cv::Point lr)
 {
 	Board::bottom_left_corner = lr;
+}
+
+void Board::setBottom_line(cv::Rect bline)
+{
+	Board::bottom_line = bline;
 }
 
 void Board::setTop_left_corner(cv::Point tl)

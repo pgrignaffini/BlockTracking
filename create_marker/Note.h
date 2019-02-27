@@ -1,7 +1,8 @@
 #pragma once
+#include "stdafx.h"
 #include "trainedBlock.h"
-#include "SoundManager.h"
 #include "ConfigurationManager.h"
+#include <SDL_mixer.h>
 
 class Note : public trainedBlock
 {
@@ -20,13 +21,15 @@ public:
 	void setID(int _id);
 	void setAudioFile(string path);
 	void setUpConf(ConfigurationManager* cm);
+	void loadSound(const std::string &path, int volume);
 
-	void play() override;
+	int play(int channel) override;
 
 private:
 	char note;
 	string fileAudio;
-	SoundManager player;
 	ConfigurationManager* config; 
+	Mix_Chunk* chunk;
+	
 };
 

@@ -1,6 +1,6 @@
+#pragma once
 #include "stdafx.h"
 #include "trainedBlocks.h"
-
 
 trainedBlocks::trainedBlocks()
 {
@@ -11,8 +11,8 @@ trainedBlocks::~trainedBlocks()
 {
 }
 
-
-trainedBlock * trainedBlocks::update(BlockDetector * detector, ConfigurationManager* config, int XPos, int YPos, vector<vector<cv::Point>> contours, int index)
+/*
+trainedBlock * trainedBlocks::update(BlockDetector * detector, ConfigurationManager* config, int XPos, int YPos, vector<vector<cv::Point>> contours, int index, cv::Rect bline)
 {
 	trainedBlock* tb = new trainedBlock();
 	vector<std::vector<cv::Point2f>> corners = detector->getIdentifiedCorners();
@@ -20,6 +20,7 @@ trainedBlock * trainedBlocks::update(BlockDetector * detector, ConfigurationMana
 
 	int id = detector->findIdentifier(corners, ids, XPos, YPos);
 	string type;
+	cv::Point center;
 
 	//look if the block has been already inserted
 	unordered_map<int, trainedBlock*>::iterator found = this->tBlocks.find(id);
@@ -28,6 +29,11 @@ trainedBlock * trainedBlocks::update(BlockDetector * detector, ConfigurationMana
 	{
 		found->second->setXPos(XPos);
 		found->second->setYPos(YPos);
+
+		center = cv::Point(XPos, YPos);
+
+		//set property for blocks positioned on the last line
+		if (bline.contains(center)) found->second->setLastLine(true); 
 
 		if (!found->second->isTrained()) //training
 		{
@@ -103,22 +109,6 @@ trainedBlock * trainedBlocks::setCorrespondingBlock(int id, unordered_map<int, t
 		//depsOf contains the ids linked to the block in consideration
 	}
 
-	/*
-	switch (id)
-	{
-		case 40: to_find = 46; break; //var 1
-		case 46: to_find = 40; break; //var 1
-		case 35: to_find = 37; break; //var 2
-		case 37: to_find = 35; break; //var 2
-		case 45: to_find = 36; break; //fun 1
-		case 36: to_find = 45; break; //fun 1
-		case 28: to_find = 24; break; //fun 2
-		case 24: to_find = 28; break; //fun 2
-		case 23: to_find = 39; break; //fun 3
-		case 39: to_find = 23; break; //fun 3
-		default: break;
-	}*/
-
 	unordered_map<int, trainedBlock*>::iterator found;
 	for (int i = 0; i < depsOf.size(); i++)
 	{
@@ -130,14 +120,14 @@ trainedBlock * trainedBlocks::setCorrespondingBlock(int id, unordered_map<int, t
 			tb->setType(found->second->getType());
 			tb->setTrained(found->second->isTrained());
 			tb->setCycles(found->second->getCycles()); //assign an integer pointer
-			tb->setReference(true); //the new block is a reference to another one
+			tb->setReference(true); //the new block found is a reference to another one, dependencies are specified in "conf/deps.txt"
 			break;
 		}
 
 	}
 
 	return tb;
-}
+}*/
 
 unordered_map<int, trainedBlock*> trainedBlocks::getTrainedBlocks()
 {

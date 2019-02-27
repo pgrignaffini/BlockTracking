@@ -1,3 +1,4 @@
+#pragma once
 #include "stdafx.h"
 #include "trainedBlock.h"
 
@@ -6,6 +7,7 @@ trainedBlock::trainedBlock() : Block()
 	trained = false;
 	defined = false;
 	reference = false;
+	lastLine = false;
 
 	count = 0;
 
@@ -64,6 +66,11 @@ void trainedBlock::setReference(bool ref)
 	trainedBlock::reference = ref;
 }
 
+void trainedBlock::setLastLine(bool ll)
+{
+	trainedBlock::lastLine = ll;
+}
+
 bool trainedBlock::isTrained() const
 {
 	return trainedBlock::trained;
@@ -78,6 +85,11 @@ bool trainedBlock::isDefined() const
 bool trainedBlock::isAReference() const
 {
 	return trainedBlock::reference;
+}
+
+bool trainedBlock::isLastLine() const
+{
+	return trainedBlock::lastLine;
 }
 
 int* trainedBlock::getCycles() const
@@ -138,7 +150,12 @@ string trainedBlock::max(unordered_map<string, int> list)
 }
 
 
-void trainedBlock::play()
+int trainedBlock::play(int channel)
+{
+	return 0;
+}
+
+void trainedBlock::playParallel()
 {
 }
 
