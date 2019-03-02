@@ -5,7 +5,7 @@
 CameraCalibration::CameraCalibration()
 {
 	calibrationSquareDimension = 0.026f; //meters = 2.6cm
-	arucoSquareDimension = 0.015f; // 1.5cm
+	arucoSquareDimension = 0.013f; // 1.3cm
 	chessboardDimensions = cv::Size(6, 9); //number of intersection points on the chessboard
 }
 
@@ -78,7 +78,7 @@ void CameraCalibration::getChessboardCorners(std::vector<cv::Mat> images, std::v
 	for (std::vector<cv::Mat>::iterator iter = images.begin(); iter != images.end(); iter++)
 	{
 		std::vector<cv::Point2f> pointBuf; //buffer to store all the corners
-		bool found = cv::findChessboardCorners(*iter, chessboardDimensions, pointBuf, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
+		bool found = cv::findChessboardCorners(*iter, cv::Size(9,6), pointBuf, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
 
 		if (found)	allFoundCorners.push_back(pointBuf);
 

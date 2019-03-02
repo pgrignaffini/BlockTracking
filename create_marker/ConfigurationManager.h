@@ -23,8 +23,7 @@ public:
 
 	void addConf(int id, std::string audio);
 	void addDep(int number, int id);
-
-
+	std::string getConfType(int id);
 	std::unordered_map<int, std::string> getConf();
 	std::unordered_map<int, std::vector<int>> getDeps();
 	std::vector<int> getDepsOf(int id);

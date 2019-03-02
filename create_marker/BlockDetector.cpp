@@ -72,19 +72,25 @@ void BlockDetector::findCorners(Mat& cameraFeed)
 	Mat cameraMatrix = Mat::eye(3, 3, CV_64F);
 	Mat distanceCoefficients;
 
-	aruco::DetectorParameters parameters;
+//	Ptr<aruco::DetectorParameters> detectorParameters = new aruco::DetectorParameters();
 	Ptr<aruco::Dictionary> markerDictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME::DICT_4X4_50);
+	cv::Ptr<cv::aruco::DetectorParameters> parameters = aruco::DetectorParameters::create();
+	
+	parameters->adaptiveThreshWinSizeMin = 10;
+	parameters->adaptiveThreshWinSizeMax = 16;
+	parameters->adaptiveThreshWinSizeStep = 2;
 
 	//namedWindow("Find markers", WINDOW_AUTOSIZE);
 
-	aruco::detectMarkers(cameraFeed, markerDictionary, corners, markerIdentifiers);
+	aruco::detectMarkers(cameraFeed, markerDictionary, corners, markerIdentifiers, parameters);
 	//for (int i = 0; i < markerIdentifiers.size(); i++) cout << markerIdentifiers.at(i) << " ";
-	aruco::estimatePoseSingleMarkers(corners, feed->getArucoSquareDimension(), cameraMatrix, distanceCoefficients, rotationVectors, translationVectors);
+	//aruco::estimatePoseSingleMarkers(corners, feed->getArucoSquareDimension(), cameraMatrix, distanceCoefficients, rotationVectors, translationVectors);
 	aruco::drawDetectedMarkers(cameraFeed, corners, markerIdentifiers); //show IDs
 
 	setIDs(markerIdentifiers);
 	setCorners(corners);
 }
+
 
 string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, int i)
 {
@@ -168,6 +174,9 @@ string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, 
 	return block_type;
 }
 
+
+//update with training
+/*
 trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks, ConfigurationManager* config, int XPos, int YPos, vector<vector<cv::Point>> contours, int index)
 {
 	trainedBlock* tb = new trainedBlock();
@@ -207,13 +216,13 @@ trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks,
 				delete(found->second); //delete pointed element
 				found->second = note;
 			}
-			/*
+			
 			else if (type == "variable")
 			{
 				Variable* var = new Variable(*found->second);
 				delete(found->second);
 				found->second = var;
-			}*/
+			}
 
 			else if (type == "function")
 			{
@@ -248,41 +257,153 @@ trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks,
 
 	else return nullptr;
 
+}*/
+
+trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks, ConfigurationManager* config, int XPos, int YPos, vector<vector<cv::Point>> contours, int index)
+{
+	trainedBlock* tb = new trainedBlock();
+	vector<std::vector<cv::Point2f>> corners = getIdentifiedCorners();
+	vector<int> ids = getIDs();
+	bool reference;
+
+	int id = findIdentifier(corners, ids, XPos, YPos);
+	string type;
+	cv::Point center;
+
+	//look if the block has been already inserted
+	unordered_map<int, trainedBlock*>::iterator found = tBlocks.find(id);
+
+	if (found != tBlocks.end()) //block already identified
+	{
+		found->second->setXPos(XPos);
+		found->second->setYPos(YPos);
+
+		center = cv::Point(XPos, YPos);
+
+		//set property for blocks positioned on the last line
+		if (bline.contains(center)) found->second->setLastLine(true);
+
+		reference = checkIfReference(tBlocks, found->second, config);
+		found->second->setReference(reference);
+
+		if (found->second->isTrained() && !found->second->isDefined()) //cast to correct type after training
+		{
+			type = found->second->getType();
+			if (type == "note")
+			{
+				Note* note = new Note(*found->second);
+				note->setUpConf(config); //set configuration file
+				delete(found->second); //delete pointed element
+				found->second = note;
+			}
+			/*
+			else if (type == "variable")
+			{
+				Variable* var = new Variable(*found->second);
+				delete(found->second);
+				found->second = var;
+			}*/
+
+			else if (type == "function")
+			{
+				Function* func = new Function(*found->second);
+				delete(found->second);
+				found->second = func;
+			}
+
+			found->second->setDefined(true); //define means that the block has all of the information that it needs to play
+		}
+
+		return found->second;
+	}
+
+	else // block not yet registered, it has an ID (aruco marker) but no type
+	{
+		cout << "New block found: " << id << endl;
+		bool reference;
+
+		tb->setXPos(XPos);
+		tb->setYPos(YPos);
+		tb->setID(id);
+
+		type = config->getConfType(id);
+		tb->setType(type);
+		tb->setTrained(true);
+
+		tBlocks.insert({ id, tb }); //insert new pair value
+
+		return tb;
+	}
+
 }
 
-trainedBlock * BlockDetector::setCorrespondingBlock(int id, unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* tb, ConfigurationManager* config)
+//checkIfReference detects whether the considered block (function) is a reference to another one or not
+//to do so it considers all the blocks defined as dependencies to the one taken into consideration 
+//and based on its cordinates (x,y) decides if it is the first to appear on the board (meaning that is the definition)
+//or not (meaning that is a reference)
+
+bool BlockDetector::checkIfReference(unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* thisBlock, ConfigurationManager* config)
 {
 	int to_find;
+	bool ref = true;
 	std::vector<int> depsOf;
-	std::vector<int>::iterator thisBlock;
+	std::vector<int>::iterator thisID;
+	trainedBlock* found = new trainedBlock();
+	trainedBlock* firstOfItsKind = new trainedBlock();
 
-	depsOf = config->getDepsOf(id);
+	depsOf = config->getDepsOf(thisBlock->getID()); 
 
 	if (depsOf.size() > 0)
 	{
-		thisBlock = std::find(depsOf.begin(), depsOf.end(), id);
-		depsOf.erase(thisBlock); //remove element to avoid circular dependencies
+		thisID = std::find(depsOf.begin(), depsOf.end(), thisBlock->getID());
+		depsOf.erase(thisID); //remove element to avoid circular dependencies
 		//depsOf contains the ids linked to the block in consideration
-	}
+		
+		int x_current, y_current, x_min, y_min;
+		
+		x_min = thisBlock->getXPos();
+		y_min = thisBlock->getYPos();
+		firstOfItsKind = thisBlock;
 
-	unordered_map<int, trainedBlock*>::iterator found;
-	for (int i = 0; i < depsOf.size(); i++)
-	{
-		found = tBlocks.find(depsOf[i]);
+		//cout << "This block: " << thisBlock->getID() << " " << x_min << " " << y_min << endl;
 
-		if (found != tBlocks.end() && !found->second->isAReference())
+		//check whether other blocks associated to this one are present on the board
+		for (int i = 0; i < depsOf.size(); i++)
 		{
-			tb->setBlocks(found->second->getBlocks()); //assign the pointer to the vector
-			tb->setType(found->second->getType());
-			tb->setTrained(found->second->isTrained());
-			tb->setCycles(found->second->getCycles()); //assign an integer pointer
-			tb->setReference(true); //the new block found is a reference to another one, dependencies are specified in "conf/deps.txt"
-			break;
-		}
+			try
+			{
+				found = tBlocks.at(depsOf[i]); //check all ids associated to block *tb (except its own)
+				x_current = found->getXPos();
+				y_current = found->getYPos();
+				//std:cout << "Found = " << found->getID() << " " << x_current << " " << y_current << std::endl;
 
+				if (x_current < x_min && y_current < y_min)
+				{
+					x_min = x_current;
+					y_min = y_current;
+					firstOfItsKind = found;
+				}
+				
+			}
+			catch (...)
+			{
+				continue;
+			}
+
+		} 
+
+		//std::cout << "MIN : " << x_min << " " << y_min << std::endl;
+		//std::cout << "FirstOfItsKind: " << firstOfItsKind->getID() << std::endl;
+
+		if (thisBlock == firstOfItsKind) ref = false;
+		else
+		{
+			thisBlock->setBlocks(firstOfItsKind->getBlocks()); //assign the pointer to the vector
+			ref = true;
+		}
 	}
 
-	return tb;
+	return ref;
 }
 
 
@@ -432,7 +553,7 @@ void BlockDetector::check_for_changes(unordered_map<int, trainedBlock*>& tBlocks
 
 }
 
-void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat &cameraFeed, ConfigurationManager* config, unordered_map<int, trainedBlock*>& tBlocks)
+void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat& cameraFeed, ConfigurationManager* config, unordered_map<int, trainedBlock*>& tBlocks)
 {
 	//cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
 	//cv::Mat distanceCoefficients;
@@ -462,9 +583,8 @@ void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat &cameraFeed, 
 	//erase blocks no longer on board
 	check_for_changes(tBlocks);
 
-
 	cout << "Identified Blocks: ";
-	for (auto& it : tBlocks) cout << it.first << " ";
+	for (auto it : tBlocks) cout << it.first << " ";
 	cout << endl;
 
 	if (!objectFound) putText(cameraFeed, "TOO MUCH NOISE! ADJUST FILTER", cv::Point(0, 50), 1, 2, cv::Scalar(0, 0, 255), 2);

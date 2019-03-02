@@ -31,8 +31,8 @@
 #include <execution>
 
 //default capture width and height
-const int FRAME_WIDTH = 1280;
-const int FRAME_HEIGHT = 720;
+const int FRAME_WIDTH = 640;
+const int FRAME_HEIGHT = 480;
 
 //max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS = 50;

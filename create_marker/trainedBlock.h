@@ -7,7 +7,7 @@ constexpr int N_TRAINING = 30;
 
 struct xDecr
 {
-	bool operator() (Block* var1, Block* var2) const  { return (var1->getXPos() > var2->getXPos()); }
+	bool operator() (Block* var1, Block* var2) const  { return (var1->getXPos() < var2->getXPos()); }
 };
 
 

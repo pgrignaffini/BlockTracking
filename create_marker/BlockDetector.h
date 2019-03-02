@@ -36,7 +36,7 @@ public:
 	trainedBlock* findObject(cv::Mat threshold, std::unordered_map<int, trainedBlock*>&  tBlocks, ConfigurationManager* config);
 	trainedBlock* update(unordered_map<int, trainedBlock*>& tBlocks, ConfigurationManager* config, int XPos, int YPos, std::vector<std::vector<cv::Point>> contours, int index);
 	//statically set block information based on its id
-	trainedBlock* setCorrespondingBlock(int id, unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* tb, ConfigurationManager* config);
+	bool checkIfReference(unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* thisBlock, ConfigurationManager* config);
 	void trackFilteredObject(cv::Mat threshold, cv::Mat & cameraFeed, ConfigurationManager * config, unordered_map<int, trainedBlock*>& tBlocks);
 
 };

@@ -109,29 +109,29 @@ void Board::identifyBoard(cv::Mat threshold_board)
 		std::vector<cv::Point2f> rectpoints_vec(rectpoint, rectpoint + sizeof rectpoint / sizeof rectpoint[0]);
 		
 		std::sort(rectpoints_vec.begin(), rectpoints_vec.end(), xGreater);
-		
+
 		if (rectpoints_vec.at(0).y > rectpoints_vec.at(1).y)
 		{
-			topright = rectpoints_vec.at(0);
-			bottomright = rectpoints_vec.at(1);
+			bottomleft = rectpoints_vec.at(0);
+			topleft = rectpoints_vec.at(1);
 		}
 
 		else
 		{
-			topright = rectpoints_vec.at(1);
-			bottomright = rectpoints_vec.at(0);
+			bottomleft = rectpoints_vec.at(1);
+			topleft = rectpoints_vec.at(0);
 		}
 
 		if (rectpoints_vec.at(2).y > rectpoints_vec.at(3).y)
 		{
-			topleft = rectpoints_vec.at(2);
-			bottomleft = rectpoints_vec.at(3);
+			bottomright = rectpoints_vec.at(2);
+			topright = rectpoints_vec.at(3);
 		}
 
 		else
 		{
-			topleft = rectpoints_vec.at(3);
-			bottomleft = rectpoints_vec.at(2);
+			bottomright = rectpoints_vec.at(3);
+			topright = rectpoints_vec.at(2);
 		}
 
 		setBottom_left_corner(bottomleft);
@@ -140,12 +140,13 @@ void Board::identifyBoard(cv::Mat threshold_board)
 		setTop_right_corner(topright);
 
 		cv::Point bline_topleft = bottomleft;
-		bline_topleft.y += 65; //last line height
+		bline_topleft.y -= 70; //last line height
 
 		cv::Rect bline = cv::Rect(bline_topleft, bottomright);
 		setBottom_line(bline);
+		///display bottom line
 		//cv::rectangle(window, bline, cv::Scalar(0, 0, 255), 4);
-		//display window with board
+		///display window with board
 		//printBoard(threshold_board);
 		return;
 

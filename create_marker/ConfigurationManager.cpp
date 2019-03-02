@@ -102,6 +102,17 @@ void ConfigurationManager::addDep(int number, int id)
 	ConfigurationManager::deps[number].push_back(id);
 }
 
+std::string ConfigurationManager::getConfType(int id)
+{
+	std::unordered_map<int, std::string>::iterator confFound;
+
+	confFound = conf.find(id);
+
+	if (confFound != conf.end()) return "note";
+	else return "function";
+
+}
+
 std::unordered_map<int, std::string> ConfigurationManager::getConf()
 {
 	return ConfigurationManager::conf;
@@ -117,7 +128,7 @@ std::vector<int> ConfigurationManager::getDepsOf(int id)
 	std::vector<int> depsOf;
 	std::vector<int>::iterator found;
 
-	for (int i = 1; i <= deps.size(); i++)
+	for (int i = 0; i < deps.size(); i++)
 	{
 		if ((found = std::find(deps[i].begin(), deps[i].end(), id)) != deps[i].end())  //id found, corresponds to function i
 		{

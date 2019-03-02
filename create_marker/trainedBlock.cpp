@@ -6,14 +6,14 @@ trainedBlock::trainedBlock() : Block()
 {
 	trained = false;
 	defined = false;
-	reference = false;
+	reference = true;
 	lastLine = false;
 
 	count = 0;
 
-	type_list["variable"] = 0;
-	type_list["function"] = 0;
-	type_list["note"] = 0;
+	//type_list["variable"] = 0;
+	//type_list["function"] = 0;
+	//type_list["note"] = 0;
 	//type_list["bracket"] = 0;
 	//type_list["break"] = 0;
 
@@ -42,7 +42,7 @@ trainedBlock::trainedBlock(const trainedBlock & _block)
 	setReference(_block.isAReference());
 
 
-	type_list = _block.type_list;
+	//type_list = _block.type_list;
 	count = 0;
 }
 
@@ -152,7 +152,7 @@ string trainedBlock::max(unordered_map<string, int> list)
 
 int trainedBlock::play(int channel)
 {
-	return 0;
+	return -1;
 }
 
 void trainedBlock::playParallel()

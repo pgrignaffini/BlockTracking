@@ -48,6 +48,11 @@ void Function::addBlock(trainedBlock* block)
 	Function::blocks->insert(block);
 }
 
+bool Function::firstInLine()
+{
+	return false;
+}
+
 bool Function::isLoop()
 {
 	return Function::looping;
@@ -56,11 +61,11 @@ bool Function::isLoop()
 int Function::play(int channel)
 {
 	cout << "Function " << getID() << " plays" << endl;
-	cout << "Function " << getID() << " contains " << *getCycles() << " cycles" << endl;
+	//cout << "Function " << getID() << " contains " << *getCycles() << " cycles" << endl;
 	string type;
 	vector<trainedBlock*> toDelete;
 
-	int ncycles = *getCycles();
+	//int ncycles = *getCycles();
 
 	for (auto it : *blocks)
 	{
@@ -75,16 +80,14 @@ int Function::play(int channel)
 		blocks->erase(it);
 	}
 
-	
-	while (looping)
+	for (auto it : *blocks)
 	{
-		for (auto it : *blocks)
-		{
-			it->play(channel);
-			while (Mix_Playing(channel)) {} //wait for the sound to finish playing before playing another one
-		}
+		it->play(channel);
+		while (Mix_Playing(channel)) {} //wait for the sound to finish playing before playing the next one
 	}
 	
+	
+	/*
 	for (int j = 0; j < ncycles; j++)
 	{
 		for (auto it : *blocks)
@@ -92,7 +95,7 @@ int Function::play(int channel)
 			it->play(channel);
 			while(Mix_Playing(channel)) {} //wait for the sound to finish playing before playing another one
 		}
-	}
+	}*/
 
 	return channel;
 	
@@ -101,12 +104,12 @@ int Function::play(int channel)
 cv::Rect2f Function::findRange(cv::Point2f br)
 {
 	int x = getXPos();
-	int y = getYPos() + BLOCK_HEIGHT / 2;
+	int y = getYPos();
 
-	cv::Point2f top_left = cv::Point2f(x, y);
+	cv::Point2f top_left = cv::Point2f(x + 10, y + BLOCK_HEIGHT);
 	cv::Point2f bottom_right = cv::Point2f(br.x, y - BLOCK_HEIGHT);
 
-	cv::Rect2f range = cv::Rect2f(bottom_right, top_left);
+	cv::Rect2f range = cv::Rect2f(top_left, bottom_right);
 
 	setRange(range);
 	return range;
@@ -140,6 +143,8 @@ void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblo
 	cout << endl;
 }
 
+//count tokens in range
+/*
 void Function::countCycles(cv::Mat threshold_plus)
 {
 	if (isAReference()) return; //if is a reference block it must not recount its cycles since they are already defined in the block that its referencing
@@ -223,6 +228,6 @@ void Function::countCycles(cv::Mat threshold_plus)
 		}
 	}
 	
-}
+}*/
 
 

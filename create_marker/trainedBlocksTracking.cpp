@@ -79,7 +79,7 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 			try 
 			{
 				clicked->findNotes(mp->br, mp->blocks);
-				clicked->countCycles(mp->thresh_cycles);
+				//clicked->countCycles(mp->thresh_cycles);
 				clicked->play(-1);
 			}
 
@@ -100,9 +100,15 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 		#pragma omp parallel for
 		for (int i = 0; i < inParallel.size(); i++)
 		{
+			cout << "Playing parallel " << endl;
+			cout << inParallel.at(i)->getID() << " ";
 			inParallel.at(i)->play(i);
-		}
-		
+		}	
+	}
+
+	else if (event == cv::EVENT_MBUTTONDOWN)
+	{
+		Mix_HaltChannel(-1); //halts all channels
 	}
 }
 
@@ -118,12 +124,12 @@ void printObjects(unordered_map<int, trainedBlock*> blocks)
 	
 }
 
-void drawObject(unordered_map<int, trainedBlock*> tBlocks, cv::Mat &frame)
+void drawObject(unordered_map<int, trainedBlock*>& tBlocks, cv::Mat &frame)
 {
 	int xpos, ypos;
 	bool lastLine;
 
-	for (auto& it : tBlocks)
+	for (auto it : tBlocks)
 	{
 		xpos = it.second->getXPos();
 		ypos = it.second->getYPos();
@@ -132,7 +138,8 @@ void drawObject(unordered_map<int, trainedBlock*> tBlocks, cv::Mat &frame)
 		cv::putText(frame, intToString(xpos) + "," + intToString(ypos), cv::Point(xpos - 30, ypos + 30), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(0, 255, 255));
 		cv::putText(frame, it.second->getType(), cv::Point(xpos, ypos - 10), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(0, 0, 0));
 		cv::putText(frame, intToString(it.second->getID()), cv::Point(xpos, ypos - 20), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 0, 0));
-		cv::putText(frame, BoolToString(it.second->isLastLine()), cv::Point(xpos, ypos - 40), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 0, 0));
+		//cv::putText(frame, BoolToString(it.second->isLastLine()), cv::Point(xpos, ypos - 40), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 0, 0));
+		//it.second->printRange(frame);
 	}
 }
 
@@ -164,10 +171,10 @@ void morphOps(cv::Mat &thresh)
 int main(int argc, char* argv[])
 {
 	//create slider bars for HSV filtering
-	ColorCalibration* colorcalib = new ColorCalibration();
+	ColorCalibration* colorCalib = new ColorCalibration();
 	if (calibrationMode)
 	{
-		colorcalib->createTrackbars();
+		colorCalib->createTrackbars();
 	}
 
 	ConfigurationManager* conf = new ConfigurationManager("conf/pianoConf.txt", "conf/deps.txt");
@@ -196,25 +203,24 @@ int main(int argc, char* argv[])
 	Token* token = new Token();
 	Board* board = new Board();
 	BlockDetector* detector = new BlockDetector();
+	CameraCalibration* camCalib = new CameraCalibration();
 
 	//trainBlocks is the structure that contains all the blocks on the board
 	unordered_map<int, trainedBlock*> trainBlocks;
 
 	//utilities for camera calibration
 	//findMarkers.loadCameraCalibration("CalibrationBlaster", cameraMatrix, distanceCoefficients); 
-	//detector->feed->loadCameraCalibration("CalibrationIntel", cameraMatrix, distanceCoefficients);
+	camCalib->loadCameraCalibration("CalibrationIntel", cameraMatrix, distanceCoefficients);
 	
-	cv::Ptr<cv::aruco::Dictionary> markerDictionary = cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME::DICT_4X4_50);
-
 	//all operations will be performed within this loop
 	while (true) 
 	{
 		int counter = 0;
-		cv::Mat cameraFeed, bgr;
+		cv::Mat cameraFeed, cameraFeedT, bgr;
 		auto rgbStream = selection.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
 		auto height = rgbStream.height();
 		auto width = rgbStream.width();
-		//	cout << height << width << endl;
+		//cout << height << width << endl;
 		rs2::frameset frames = pipe.wait_for_frames();
 
 		if (frames.size() > 0) 
@@ -226,6 +232,12 @@ int main(int argc, char* argv[])
 			if (cv::waitKey(1000 / 60) >= 0) break;
 		}
 
+		/*display camera with correct orientation*/
+		//cv::transpose(cameraFeed, cameraFeedT);
+		//cv::transpose(cameraFeedT, cameraFeedT);
+		//cv::flip(cameraFeedT, cameraFeedT, -1);
+		/*****************************************/
+		
 		//convert frame from BGR to HSV colorspace
 		cvtColor(cameraFeed, HSV, cv::COLOR_BGR2HSV);
 		//imshow("HSV", HSV);
@@ -236,8 +248,8 @@ int main(int argc, char* argv[])
 
 			//if in calibration mode, we track objects based on the HSV slider values
 			//this branch is implemented just for colors calibrating purposes
-			cv::inRange(HSV, cv::Scalar(colorcalib->H_MIN, colorcalib->S_MIN, colorcalib->V_MIN),
-							 cv::Scalar(colorcalib->H_MAX, colorcalib->S_MAX, colorcalib->V_MAX), threshold_block);
+			cv::inRange(HSV, cv::Scalar(colorCalib->H_MIN, colorCalib->S_MIN, colorCalib->V_MIN),
+							 cv::Scalar(colorCalib->H_MAX, colorCalib->S_MAX, colorCalib->V_MAX), threshold_block);
 
 			inRange(HSV, token->getHSVmin(), token->getHSVmax(), threshold_token); //black blocks
 			inRange(HSV, board->getHSVmin(), board->getHSVmax(), threshold_board); // board
@@ -251,8 +263,8 @@ int main(int argc, char* argv[])
 			trainedBlock* block = new trainedBlock();
 
 			//cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
-			inRange(HSV, block->getHSVmin(), block->getHSVmax(), threshold_block); // orange blocks
-			inRange(HSV, token->getHSVmin(), token->getHSVmax(), threshold_token); //black blocks
+			inRange(HSV, block->getHSVmin(), block->getHSVmax(), threshold_block); // blocks
+			inRange(HSV, token->getHSVmin(), token->getHSVmax(), threshold_token); // tokens
 			inRange(HSV, board->getHSVmin(), board->getHSVmax(), threshold_board); // board
 
 			morphOps(threshold_block);
@@ -264,7 +276,7 @@ int main(int argc, char* argv[])
 			detector->setBLine(board->getBottomLine());
 
 			if (counter == 0) detector->trackFilteredObject(threshold_block, cameraFeed, conf, trainBlocks);
-			counter = (++counter) % 25;
+			counter = (++counter) % 45;
 			drawObject(trainBlocks, cameraFeed); 
 
 		}
@@ -274,7 +286,7 @@ int main(int argc, char* argv[])
 		//imshow("Token threshold", threshold_token);
 		//imshow("Board threshold", threshold_board);
 
-		//Mouse params for callback
+		///Mouse params for callback
 		MouseParams* mp = new MouseParams();
 		mp->blocks = trainBlocks;
 		mp->br = board->getBottom_right_corner();
@@ -282,6 +294,8 @@ int main(int argc, char* argv[])
 
 		cv::namedWindow("Camera", cv::WINDOW_AUTOSIZE);
 		cv::setMouseCallback("Camera", CallBackBlocks, static_cast<void*>(mp));
+		cv::rectangle(cameraFeed, board->getBottomLine(), cv::Scalar(0, 0, 255), 4);
+
 		imshow("Camera", cameraFeed);
 
 		//delay 30ms so that screen can refresh.

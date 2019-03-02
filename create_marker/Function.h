@@ -23,6 +23,7 @@ public:
 	void setLoop(bool isLoop);
 	
 	void addBlock(trainedBlock* block);
+	bool firstInLine();
 
 	bool isLoop();
 	 
@@ -30,7 +31,7 @@ public:
 	cv::Rect2f findRange(cv::Point2f br) override;
 	void printRange(cv::Mat cameraFeed) override;
 	void findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblocks) override;
-	void countCycles(cv::Mat threshold_plus) override;
+	//void countCycles(cv::Mat threshold_plus) override;
 	set<trainedBlock*, xDecr>* getBlocks() const override;
 };
 

@@ -5,14 +5,8 @@
 Block::Block()
 {
 	//if we need to detect a different color we need to change the HSV values accordingly
-	
-	setHSVmin(cv::Scalar(0, 86, 177));//hardcoded orange color
+	setHSVmin(cv::Scalar(0, 86, 177)); //hardcoded orange color
 	setHSVmax(cv::Scalar(65, 256, 256));
-	
-	//setHSVmin(cv::Scalar(0, 103, 168));//arancione casa
-	//setHSVmax(cv::Scalar(32, 256, 256)); //arancione casa
-	//setHSVmin(cv::Scalar(0, 72, 188));//arancione unipr
-	//setHSVmax(cv::Scalar(75, 256, 256)); //arancione unipr
 	setXPos(0);
 	setYPos(0);
 	setID(-1);
