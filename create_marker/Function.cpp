@@ -77,13 +77,13 @@ int Function::play(int channel)
 			{
 				try
 				{
-					if (it != NULL) it->play(channel);
+					it->play(channel);
 					do {} while (Mix_Playing(channel)); //wait for the sound to finish playing before playing the next one
 				}
 				catch (...)
 				{
-
-					cv::waitKey(10);
+					std::cout << "Exception thrown while playing" << std::endl;
+					continue;
 				}
 			}
 		}

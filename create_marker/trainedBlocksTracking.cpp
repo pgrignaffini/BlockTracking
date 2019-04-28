@@ -8,9 +8,17 @@
 #include "ColorCalibration.h"
 #include "Token.h"
 #include "Hand.h"
+#include <random>
 
 //if we would like to calibrate our filter values, set to true.
 bool calibrationMode = false;
+//number of channels 
+const int N_CHANNEL = 32;
+
+//random channel number generator
+std::random_device                  rand_dev;
+std::mt19937                        generator(rand_dev());
+std::uniform_int_distribution<int>  distr(0, N_CHANNEL);
 
 struct MouseParams 
 {
@@ -79,13 +87,21 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 		{
 			try 
 			{
+				int channel = distr(generator);
+				while (Mix_Playing(channel))
+				{
+					channel++; //make sure the channel is not already in use
+					if (channel >= N_CHANNEL) channel = 0;
+				}
+
 				clicked->findNotes(mp->br, mp->blocks);
+				
 				if (clicked->looping)
 				{
-					std::thread t(&trainedBlock::play, clicked, -1);
+					std::thread t(&trainedBlock::play, clicked, channel);
 					t.detach();
 				}
-				else clicked->play(-1);
+				else clicked->play(channel);
 			}
 
 			catch (std::exception & exc)
@@ -156,13 +172,21 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 		{
 			try
 			{
+				int channel = distr(generator);
+				while (Mix_Playing(channel))
+				{
+					channel++; //make sure the channel is not already in use
+					if (channel >= N_CHANNEL) channel = 0;
+				}
+
 				clicked->findNotes(br, blocks);
+				
 				if (clicked->looping)
 				{
-					std::thread t(&trainedBlock::play, clicked, -1);
+					std::thread t(&trainedBlock::play, clicked, channel);
 					t.detach();
 				}
-				else clicked->play(-1);
+				else clicked->play(channel);
 			}
 
 			catch (std::exception & exc)
@@ -278,7 +302,7 @@ int main(int argc, char* argv[])
 		colorCalib->createTrackbars();
 	}
 
-	ConfigurationManager* conf = new ConfigurationManager("conf/pianoConf.txt", "conf/deps.txt");
+	ConfigurationManager* conf = new ConfigurationManager("conf/beatConf.txt", "conf/deps.txt");
 	conf->loadConf();
 	conf->loadDeps();
 
@@ -288,7 +312,8 @@ int main(int argc, char* argv[])
 	}
 
 	// Amount of channels (Max amount of sounds playing at the same time)
-	Mix_AllocateChannels(32);
+	Mix_AllocateChannels(N_CHANNEL);
+
 
 	rs2::context rsCtx;
 	auto list = rsCtx.query_devices();
@@ -378,6 +403,10 @@ int main(int argc, char* argv[])
 			if (counter == 0)
 			{
 				detector->trackFilteredObject(threshold_block, cameraFeed, cameraMatrix, distanceCoefficients, conf, trainBlocks);
+			}
+
+			if (counter == 2)
+			{
 				tokens = detector->trackTokens(threshold_token);
 				detector->setUpFunctions(tokens, trainBlocks);
 			}
@@ -411,10 +440,6 @@ int main(int argc, char* argv[])
 		mp->br = board->getBottom_right_corner();
 		mp->thresh_cycles = threshold_token; 
 
-		//given a fingertip point:
-		//create an area of block's size dimension, with the fingertip as the origin
-		//scan tBlocks to check which block is contained into that area, choose the closest one
-		//play that block
 
 		cv::namedWindow("Camera", cv::WINDOW_AUTOSIZE);
 		cv::setMouseCallback("Camera", CallBackBlocks, static_cast<void*>(mp));
