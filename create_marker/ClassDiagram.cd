@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="Block" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.25" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAMACAACACAKJCAAAEIgAAAARABAIAAAgAAAQAACgE=</HashCode>
+      <FileName>Block.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BlockDetector" Collapsed="true">
+    <Position X="5.25" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAIgAAAAAAAAgBCCIQAQAAAAAIBAAgAAAAQAAABGCA4=</HashCode>
+      <FileName>BlockDetector.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Board" Collapsed="true">
+    <Position X="7" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>QEAAACIAQCCAqIQAQAAJjAiCAEIEBAAIAEIIACAAAAQ=</HashCode>
+      <FileName>Board.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CameraCalibration" Collapsed="true">
+    <Position X="8.75" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>ECAAABCAQCQAAIAAAAABAAAARAgARABABAAAAAAAAEA=</HashCode>
+      <FileName>CameraCalibration.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ColorCalibration" Collapsed="true">
+    <Position X="5.25" Y="1.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAKAAAABAQAACAAABAAAAFAAAAAAACCAAAQAAAAAA=</HashCode>
+      <FileName>ColorCalibration.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ConfigurationManager" Collapsed="true">
+    <Position X="7" Y="1.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAUAAACAAIEAAgAgAAAAgBgBAAAUAAAgAAEAAAAAEA=</HashCode>
+      <FileName>ConfigurationManager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Function" Collapsed="true">
+    <Position X="0.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAIAAoIAAAAAQAgAAIAAACBAEAEQACABAAIAAA=</HashCode>
+      <FileName>Function.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Note" Collapsed="true">
+    <Position X="2.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQACQAAAAABAAAAIAAggAAAAAACAAFAAAAEAAAGACAA=</HashCode>
+      <FileName>Note.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="trainedBlock" Collapsed="true">
+    <Position X="1.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAEAAACAgAhAABhUgAAAAACAKgEEAMwAQAhAEADSA=</HashCode>
+      <FileName>trainedBlock.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

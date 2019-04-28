@@ -4,7 +4,7 @@
 
 Function::Function()
 {
-
+	trainedBlock();
 }
 
 Function::~Function()
@@ -15,7 +15,6 @@ Function::~Function()
 Function::Function(const trainedBlock &b) : trainedBlock(b)
 {
 	range = cv::Rect2f();
-	looping = false;
 }
 
 set<trainedBlock*, xDecr>* Function::getBlocks() const
@@ -38,11 +37,6 @@ void Function::setRange(cv::Rect2f _range)
 	Function::range = _range;
 }
 
-void Function::setLoop(bool isLoop)
-{
-	Function::looping = isLoop;
-}
-
 void Function::addBlock(trainedBlock* block)
 {
 	Function::blocks->insert(block);
@@ -51,11 +45,6 @@ void Function::addBlock(trainedBlock* block)
 bool Function::firstInLine()
 {
 	return false;
-}
-
-bool Function::isLoop()
-{
-	return Function::looping;
 }
 
 int Function::play(int channel)
@@ -80,12 +69,26 @@ int Function::play(int channel)
 		blocks->erase(it);
 	}
 
-	for (auto it : *blocks)
+	do
 	{
-		it->play(channel);
-		while (Mix_Playing(channel)) {} //wait for the sound to finish playing before playing the next one
-	}
-	
+		if (!blocks->empty())
+		{
+			for (auto it : *blocks)
+			{
+				try
+				{
+					if (it != NULL) it->play(channel);
+					do {} while (Mix_Playing(channel)); //wait for the sound to finish playing before playing the next one
+				}
+				catch (...)
+				{
+
+					cv::waitKey(10);
+				}
+			}
+		}
+
+	} while (*looping);
 	
 	/*
 	for (int j = 0; j < ncycles; j++)
@@ -143,91 +146,5 @@ void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblo
 	cout << endl;
 }
 
-//count tokens in range
-/*
-void Function::countCycles(cv::Mat threshold_plus)
-{
-	if (isAReference()) return; //if is a reference block it must not recount its cycles since they are already defined in the block that its referencing
-
-	setLoop(false);
-
-	cv::Mat temp, canny_out;
-	cv::Rect range = getRange();
-
-	reset_cycles();
-	//cout << "area" << range.area() << endl;
-
-	if (range.area() > 0)
-	{
-		threshold_plus.copyTo(temp); 
-		//these two vectors needed for output of findContours
-		vector<vector<cv::Point>> contours;
-		vector<cv::Vec4i> hierarchy;
-
-		Canny(temp, canny_out, 0, 50, 5);
-		//imshow("Canny", canny_out);
-
-		//find contours of filtered image using openCV findContours function
-		findContours(canny_out, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-		//contoursConvexHull(contours);
-
-		cv::RNG rng(12345);
-		
-		/// Draw contours
-		cv::Mat drawing = cv::Mat::zeros(canny_out.size(), CV_8UC3);
-		for (size_t i = 0; i < contours.size(); ++i)
-		{
-			cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-			//drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
-			drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, cv::Point());
-		}
-
-		/// Show in a window
-		cv::namedWindow("Contours", cv::WINDOW_AUTOSIZE);
-		imshow("Contours", drawing);
-
-
-		int index = 0;
-		int xPos, yPos;
-
-		if (hierarchy.size() > 0)
-		{
-			for (; index >= 0; index = hierarchy[index][0])
-			{
-				cv::Moments moment = moments((cv::Mat)contours[index]);
-				double area = moment.m00;
-
-				//cout << "Area: " << area << endl;
-
-				if (area > 10 * 10)
-				{
-
-					xPos = moment.m10 / area;
-					yPos = moment.m01 / area;
-
-					cv::Point blockPosition = cv::Point(xPos, yPos);
-
-					//circle(cameraFeed, plusPosition, 10, cv::Scalar(0, 255, 0));
-
-					if (range.contains(blockPosition)) //rect for plus blocks
-					{
-						if (area < 30 * 30) //black token block has an area of approximately 620px
-						{
-							incrementCycles();
-						}
-
-						else //infinite loop block has an area of approximately 2000px
-						{
-							cout << "Loop found" << endl;
-							setLoop(true);
-						}
-					}
-				}
-
-			}
-		}
-	}
-	
-}*/
 
 

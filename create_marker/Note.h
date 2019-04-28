@@ -12,12 +12,9 @@ public:
 	~Note();
 
 	Note(const trainedBlock & b);
-	Note(char data);
 
-	char getNote();
 	std::string getAudioFile() const;
-	
-	void setNote(char data);
+
 	void setID(int _id);
 	void setAudioFile(string path);
 	void setUpConf(ConfigurationManager* cm);
@@ -26,7 +23,7 @@ public:
 	int play(int channel) override;
 
 private:
-	char note;
+	
 	string fileAudio;
 	ConfigurationManager* config; 
 	Mix_Chunk* chunk;

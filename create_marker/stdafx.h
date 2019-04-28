@@ -4,7 +4,6 @@
 //
 
 #pragma once
-
 #include "targetver.h"
 
 #include <stdio.h>
@@ -21,10 +20,8 @@
 #include <opencv2\aruco.hpp>
 #include <opencv2\core\types.hpp>
 #include <opencv2\imgcodecs.hpp>
-#include <opencv2\imgproc.hpp>
-#include <opencv2\aruco.hpp>
 #include <opencv2\calib3d.hpp>
-#include <opencv2\highgui.hpp>
+
 
 #include <librealsense2/rs.hpp>
 #include <omp.h>
@@ -39,11 +36,8 @@ const int MAX_NUM_OBJECTS = 50;
 //minimum and maximum object area
 const int MIN_OBJECT_AREA = 20 * 20;
 const double MAX_OBJECT_AREA = FRAME_HEIGHT * FRAME_WIDTH / 1.5;
-
 //block dimension
 const int BLOCK_WIDTH = 40;
 const int BLOCK_HEIGHT = 40;
-
-
 
 // TODO: reference additional headers your program requires here

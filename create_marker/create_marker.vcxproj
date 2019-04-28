@@ -175,6 +175,7 @@
     <ClInclude Include="ColorCalibration.h" />
     <ClInclude Include="ConfigurationManager.h" />
     <ClInclude Include="Function.h" />
+    <ClInclude Include="Hand.h" />
     <ClInclude Include="Note.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -189,6 +190,7 @@
     <ClCompile Include="ColorCalibration.cpp" />
     <ClCompile Include="ConfigurationManager.cpp" />
     <ClCompile Include="Function.cpp" />
+    <ClCompile Include="Hand.cpp" />
     <ClCompile Include="Note.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -199,6 +201,9 @@
     <ClCompile Include="Token.cpp" />
     <ClCompile Include="trainedBlock.cpp" />
     <ClCompile Include="trainedBlocksTracking.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

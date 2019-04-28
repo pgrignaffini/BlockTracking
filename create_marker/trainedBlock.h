@@ -20,9 +20,11 @@ private:
 	bool reference; //used by function blocks, needed to set the correct amount of cycles that a function block whose referencing to another needs to execute
 	int* cycles; //used only for Function
 	bool lastLine; //used for blocks which are placed on the bottom line of the board
+	
 
 public:
 	int count;
+	bool* looping;
 	
 	unordered_map<string, int> type_list;
 	set<trainedBlock*, xDecr>* blocks;

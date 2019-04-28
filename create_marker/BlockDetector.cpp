@@ -64,13 +64,13 @@ double BlockDetector::angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 
 //Core functionalities
 
-void BlockDetector::findCorners(Mat& cameraFeed)
+void BlockDetector::findCorners(Mat& cameraFeed, Mat& cameraMatrix, Mat& distanceCoefficients)
 {
 	vector<int> markerIdentifiers;
 	vector<vector<Point2f>> corners, rejectedCandidates;
 	vector<Vec3d> rotationVectors, translationVectors;
-	Mat cameraMatrix = Mat::eye(3, 3, CV_64F);
-	Mat distanceCoefficients;
+	//Mat cameraMatrix = Mat::eye(3, 3, CV_64F);
+	//Mat distanceCoefficients;
 
 //	Ptr<aruco::DetectorParameters> detectorParameters = new aruco::DetectorParameters();
 	Ptr<aruco::Dictionary> markerDictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME::DICT_4X4_50);
@@ -79,19 +79,20 @@ void BlockDetector::findCorners(Mat& cameraFeed)
 	parameters->adaptiveThreshWinSizeMin = 10;
 	parameters->adaptiveThreshWinSizeMax = 16;
 	parameters->adaptiveThreshWinSizeStep = 2;
+	parameters->maxMarkerPerimeterRate = 1;
 
 	//namedWindow("Find markers", WINDOW_AUTOSIZE);
 
 	aruco::detectMarkers(cameraFeed, markerDictionary, corners, markerIdentifiers, parameters);
 	//for (int i = 0; i < markerIdentifiers.size(); i++) cout << markerIdentifiers.at(i) << " ";
-	//aruco::estimatePoseSingleMarkers(corners, feed->getArucoSquareDimension(), cameraMatrix, distanceCoefficients, rotationVectors, translationVectors);
-	aruco::drawDetectedMarkers(cameraFeed, corners, markerIdentifiers); //show IDs
+	aruco::estimatePoseSingleMarkers(corners, feed->getArucoSquareDimension(), cameraMatrix, distanceCoefficients, rotationVectors, translationVectors);
+	//aruco::drawDetectedMarkers(cameraFeed, corners, markerIdentifiers); //show IDs
 
 	setIDs(markerIdentifiers);
 	setCorners(corners);
 }
 
-
+//not in use
 string BlockDetector::detectType(std::vector<std::vector<cv::Point>>& contours, int i)
 {
 	string block_type;
@@ -317,14 +318,12 @@ trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks,
 		return found->second;
 	}
 
-	else // block not yet registered, it has an ID (aruco marker) but no type
+	else if (id != -1) // block not yet registered       
 	{
 		cout << "New block found: " << id << endl;
-		bool reference;
-
 		tb->setXPos(XPos);
-		tb->setYPos(YPos);
-		tb->setID(id);
+		tb->setYPos(YPos);   
+		tb->setID(id);  
 
 		type = config->getConfType(id);
 		tb->setType(type);
@@ -338,8 +337,8 @@ trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks,
 }
 
 //checkIfReference detects whether the considered block (function) is a reference to another one or not
-//to do so it considers all the blocks defined as dependencies to the one taken into consideration 
-//and based on its cordinates (x,y) decides if it is the first to appear on the board (meaning that is the definition)
+//to do so it considers all the blocks defined as dependencies of the one taken into consideration 
+//and based on its coordinates (x,y) decides if it is the first to appear on the board (meaning that is the   definition)
 //or not (meaning that is a reference)
 
 bool BlockDetector::checkIfReference(unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* thisBlock, ConfigurationManager* config)
@@ -406,6 +405,103 @@ bool BlockDetector::checkIfReference(unordered_map<int, trainedBlock*>& tBlocks,
 	return ref;
 }
 
+std::vector<Token*> BlockDetector::trackTokens(cv::Mat threshold_token)
+{
+	std::vector<Token*> tokens;
+	//use moments method to find our filtered object
+	cv::Mat temp, canny_out;
+	std::vector<cv::Vec4i> hierarchy;
+	std::vector<vector<cv::Point>> contours;
+
+	threshold_token.copyTo(temp);
+	//Canny(temp, canny_out, thresh, thresh * 2, 3);
+	Canny(temp, canny_out, 0, 50, 5);
+
+	//find contours of filtered image using openCV findContours function
+	findContours(canny_out, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+	/*
+	/// Draw contours
+	Mat drawing = Mat::zeros(canny_out.size(), CV_8UC3);
+	for (size_t i = 0; i < contours.size(); ++i)
+	{
+
+		Scalar color = Scalar(0,255,0);
+		//drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+		drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+	}
+
+	/// Show in a window
+	namedWindow("Contours", WINDOW_AUTOSIZE);
+	imshow("Contours", drawing);
+	*/
+	
+	double refArea = 0;
+
+	if (hierarchy.size() > 0)
+	{
+		int numObjects = hierarchy.size();
+		if (numObjects < MAX_NUM_OBJECTS)
+		{
+			int index = 0;
+			for (; index >= 0; index = hierarchy[index][0])
+			{
+
+				cv::Moments moment = moments((cv::Mat)contours[index]);
+				double area = moment.m00;
+
+				if (area > LOOP_AREA)
+				{
+					try
+					{
+						int X = moment.m10 / area;
+						int Y = moment.m01 / area;
+
+						cv::Point pos = cv::Point(X, Y);
+
+						Token* found = new Token(pos);
+						tokens.push_back(found);
+					}
+					catch (exception& e)
+					{
+						std::cout << "Something went wrong: " << e.what() << '\n';
+					}
+				}
+
+			}
+		}
+	}
+
+	return tokens;
+}
+
+void BlockDetector::setUpFunctions(std::vector<Token*> tokens, unordered_map<int, trainedBlock*>& tBlocks)
+{
+	if (!tBlocks.empty())
+	{
+		for (auto b : tBlocks)
+		{
+			bool foundLoop = false;
+			if (b.second->getType() == "function" && !b.second->isAReference())
+			{
+				std::cout << b.second->getID() << std::endl;
+				for (auto t : tokens)
+				{
+					if (b.second->getYPos() - (BLOCK_HEIGHT / 2) <= t->getYPos() && t->getYPos() <= b.second->getYPos() + (BLOCK_HEIGHT / 2))
+					{
+						*b.second->looping = true;
+						foundLoop = true;
+						std::cout << "Found loop for function: " << b.second->getID() << std::endl;
+					}
+				}
+
+				if (!foundLoop) *b.second->looping = false;
+			}
+
+		}
+	}
+}
+
 
 trainedBlock* BlockDetector::findObject(cv::Mat threshold, std::unordered_map<int, trainedBlock*>& tBlocks, ConfigurationManager* config)
 {
@@ -421,6 +517,22 @@ trainedBlock* BlockDetector::findObject(cv::Mat threshold, std::unordered_map<in
 
 	//find contours of filtered image using openCV findContours function
 	findContours(canny_out, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+	/*
+	/// Draw contours
+	Mat drawing = Mat::zeros(canny_out.size(), CV_8UC3);
+	for (size_t i = 0; i < contours.size(); ++i)
+	{
+		
+		Scalar color = Scalar(0,255,0);
+		//drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+		drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+	}
+
+	/// Show in a window
+	namedWindow("Contours", WINDOW_AUTOSIZE);
+	imshow("Contours", drawing);
+	*/
 
 	double refArea = 0;
 
@@ -510,6 +622,8 @@ int BlockDetector::findIdentifier(InputArrayOfArrays _corners, InputArray _ids, 
 void BlockDetector::check_for_changes(unordered_map<int, trainedBlock*>& tBlocks)
 {
 	vector<int> alive = getIDs();
+	//std::cout << "Alive :";
+	//for (int i = 0; i < alive.size(); i++) std::cout << alive[i] << " ";
 	vector<int> saved;
 	int id;
 	trainedBlock* current;
@@ -523,6 +637,7 @@ void BlockDetector::check_for_changes(unordered_map<int, trainedBlock*>& tBlocks
 	for (unordered_map<int, trainedBlock*>::iterator it = tBlocks.begin(); it != tBlocks.end(); ++it)
 	{
 		saved.push_back(it->first);
+		//if (it->second->getType() == "function" && !it->second->isAReference()) it->second->findNotes(bottomRight, tBlocks);
 	}
 
 	for (int i = 0; i < saved.size(); ++i)
@@ -553,39 +668,21 @@ void BlockDetector::check_for_changes(unordered_map<int, trainedBlock*>& tBlocks
 
 }
 
-void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat& cameraFeed, ConfigurationManager* config, unordered_map<int, trainedBlock*>& tBlocks)
+void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat& cameraFeed, cv::Mat& cameraMatrix, cv::Mat& distanceCoefficients, ConfigurationManager* config, unordered_map<int, trainedBlock*>& tBlocks)
 {
 	//cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
 	//cv::Mat distanceCoefficients;
 	//these two vectors needed for output of findContours
 	bool objectFound;
 
-	findCorners(cameraFeed);
+	findCorners(cameraFeed, cameraMatrix, distanceCoefficients);
 	trainedBlock* blockFound = findObject(threshold, tBlocks, config);
 
 	if (blockFound != nullptr) objectFound = true;
 	else objectFound = false;
 
-	/*
-	/// Draw contours
-	Mat drawing = Mat::zeros(canny_out.size(), CV_8UC3);
-	for (size_t i = 0; i < contours.size(); ++i)
-	{
-		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-		//drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
-		drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
-	}*/
-
-	/// Show in a window
-	//namedWindow("Contours", WINDOW_AUTOSIZE);
-	//imshow("Contours", drawing);
-
-	//erase blocks no longer on board
+	//updates blocks on board
 	check_for_changes(tBlocks);
-
-	cout << "Identified Blocks: ";
-	for (auto it : tBlocks) cout << it.first << " ";
-	cout << endl;
 
 	if (!objectFound) putText(cameraFeed, "TOO MUCH NOISE! ADJUST FILTER", cv::Point(0, 50), 1, 2, cv::Scalar(0, 0, 255), 2);
 

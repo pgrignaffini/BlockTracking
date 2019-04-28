@@ -4,6 +4,7 @@
 #include "ConfigurationManager.h"
 #include "Note.h"
 #include "Function.h"
+#include "Token.h"
 #include "CameraCalibration.h"
 
 class BlockDetector
@@ -14,6 +15,7 @@ private:
 	std::vector<std::vector<cv::Point2f>> markerCorners; //identified aruco ids' corners
 	cv::Rect bline; //board's bottom line
 	CameraCalibration* feed; //detection depends on specified camera calibration
+	int changeCounter = 0;
 
 public:
 	BlockDetector();
@@ -29,15 +31,18 @@ public:
 
 	double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0);
 
-	void findCorners(cv::Mat& cameraFeed);
+	/***BLOCKS TRACKING***/
 	int findIdentifier(cv::InputArrayOfArrays _corners, cv::InputArray _ids, int xm, int ym);
-	void check_for_changes(std::unordered_map<int, trainedBlock*>& tBlocks);
+	void check_for_changes(unordered_map<int, trainedBlock*>& tBlocks);
+	void trackFilteredObject(cv::Mat threshold, cv::Mat & cameraFeed, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients, ConfigurationManager * config, unordered_map<int, trainedBlock*>& tBlocks);
+	void findCorners(cv::Mat & cameraFeed, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients);
 	std::string detectType(std::vector<std::vector<cv::Point>>& contours, int i);
 	trainedBlock* findObject(cv::Mat threshold, std::unordered_map<int, trainedBlock*>&  tBlocks, ConfigurationManager* config);
 	trainedBlock* update(unordered_map<int, trainedBlock*>& tBlocks, ConfigurationManager* config, int XPos, int YPos, std::vector<std::vector<cv::Point>> contours, int index);
-	//statically set block information based on its id
 	bool checkIfReference(unordered_map<int, trainedBlock*>& tBlocks, trainedBlock* thisBlock, ConfigurationManager* config);
-	void trackFilteredObject(cv::Mat threshold, cv::Mat & cameraFeed, ConfigurationManager * config, unordered_map<int, trainedBlock*>& tBlocks);
-
+	
+	/***TOKENS TRACKING***/
+	std::vector<Token*> trackTokens(cv::Mat threshold_token);
+	void setUpFunctions(std::vector<Token*> tokens, unordered_map<int, trainedBlock*>& tBlocks);
 };
 

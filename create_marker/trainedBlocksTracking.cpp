@@ -7,13 +7,14 @@
 #include "BlockDetector.h"
 #include "ColorCalibration.h"
 #include "Token.h"
+#include "Hand.h"
 
 //if we would like to calibrate our filter values, set to true.
 bool calibrationMode = false;
 
 struct MouseParams 
 {
-	unordered_map<int, trainedBlock*> blocks; 
+	unordered_map<int, trainedBlock*> blocks;  
 	cv::Point2f br;
 	cv::Mat thresh_cycles;
 };
@@ -79,8 +80,12 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 			try 
 			{
 				clicked->findNotes(mp->br, mp->blocks);
-				//clicked->countCycles(mp->thresh_cycles);
-				clicked->play(-1);
+				if (clicked->looping)
+				{
+					std::thread t(&trainedBlock::play, clicked, -1);
+					t.detach();
+				}
+				else clicked->play(-1);
 			}
 
 			catch (std::exception & exc)
@@ -97,6 +102,7 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 
 		std::vector<trainedBlock*> inParallel = getParallelBlocks(mp->blocks);
 
+		//play in parallel
 		#pragma omp parallel for
 		for (int i = 0; i < inParallel.size(); i++)
 		{
@@ -112,6 +118,62 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 	}
 }
 
+void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*> blocks)
+{	
+	std::cout << "Finger detected" << endl;
+	trainedBlock* clicked = nullptr;
+	cv::Point blockPos;
+	cv::Point br = board->getBottom_right_corner();
+	cv::Rect bline = board->getBottomLine();
+	cv::Rect tipArea = hand->getTipArea();
+	cv::Point fingerTip = hand->getFinger();
+
+	if (bline.contains(fingerTip))
+	{
+		Mix_HaltChannel(-1); //halts all channels
+
+		std::vector<trainedBlock*> inParallel = getParallelBlocks(blocks);
+
+		//play in parallel
+		#pragma omp parallel for
+		for (int i = 0; i < inParallel.size(); i++)
+		{
+			cout << "Playing parallel " << endl;
+			cout << inParallel.at(i)->getID() << " ";
+			inParallel.at(i)->play(i);
+		}
+	}
+
+	else
+	{
+		for (auto it : blocks)
+		{
+			blockPos = cv::Point(it.second->getXPos(), it.second->getYPos());
+			if (tipArea.contains(blockPos)) clicked = it.second;
+		}
+
+		if (clicked != nullptr)
+		{
+			try
+			{
+				clicked->findNotes(br, blocks);
+				if (clicked->looping)
+				{
+					std::thread t(&trainedBlock::play, clicked, -1);
+					t.detach();
+				}
+				else clicked->play(-1);
+			}
+
+			catch (std::exception & exc)
+			{
+				cerr << exc.what() << endl;
+			}
+		}
+	}
+	
+}
+
 void printObjects(unordered_map<int, trainedBlock*> blocks)
 {
 	trainedBlock* block;
@@ -124,7 +186,7 @@ void printObjects(unordered_map<int, trainedBlock*> blocks)
 	
 }
 
-void drawObject(unordered_map<int, trainedBlock*>& tBlocks, cv::Mat &frame)
+void drawObject(unordered_map<int, trainedBlock*> tBlocks, cv::Mat &frame)
 {
 	int xpos, ypos;
 	bool lastLine;
@@ -143,6 +205,45 @@ void drawObject(unordered_map<int, trainedBlock*>& tBlocks, cv::Mat &frame)
 	}
 }
 
+void drawTokens(std::vector<Token*> tokens, cv::Mat &frame)
+{
+	int xpos, ypos;
+	bool lastLine;
+
+	for (auto it : tokens)
+	{
+		xpos = it->getXPos();
+		ypos = it->getYPos();
+
+		circle(frame, cv::Point(xpos, ypos), 10, cv::Scalar(255, 0, 0));
+		cv::putText(frame, intToString(xpos) + "," + intToString(ypos), cv::Point(xpos - 30, ypos + 30), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(0, 255, 255));
+	}
+}
+
+void drawFinger(Hand* hand, cv::Mat &frame)
+{
+	cv::Point fingerTip = hand->getFinger();
+	int x_offset, y_offset;
+	cv::Rect tipArea = hand->getTipArea(); 
+
+	if (fingerTip != cv::Point(0,0) && hand->isDetected())
+	{
+		cv::circle(frame, fingerTip, 8, cv::Scalar(0, 255, 0), 2);
+		
+		if (hand->getDirection() == 1)
+		{
+			cv::putText(frame, "Vertical", cv::Point(10, 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0));
+		}
+
+		if (hand->getDirection() == 2)
+		{
+			cv::putText(frame, "Horizontal", cv::Point(10, 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0));
+		}
+
+		cv::rectangle(frame, tipArea, cv::Scalar(0, 0, 255), 4);
+	}
+}
+
 
 void morphOps(cv::Mat &thresh)
 {
@@ -152,11 +253,11 @@ void morphOps(cv::Mat &thresh)
 	//dilate with larger element so make sure object is visible
 	cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
 
-	erode(thresh, thresh, erodeElement);
-	erode(thresh, thresh, erodeElement);
+	dilate(thresh, thresh, dilateElement);
+	dilate(thresh, thresh, dilateElement);
 
-	dilate(thresh, thresh, dilateElement);
-	dilate(thresh, thresh, dilateElement);
+	erode(thresh, thresh, erodeElement);
+	erode(thresh, thresh, erodeElement);
 
 	cv::Mat erodeElement2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2));
 	cv::Mat dilateElement2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
@@ -197,25 +298,34 @@ int main(int argc, char* argv[])
 
 	//Matrix to store each frame of the webcam feed
 	cv::Mat distanceCoefficients, HSV;
-	cv::Mat threshold_block, threshold_token, threshold_board;
+	cv::Mat threshold, threshold_block, threshold_token, threshold_board, threshold_hand;
 	cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
 
 	Token* token = new Token();
 	Board* board = new Board();
 	BlockDetector* detector = new BlockDetector();
 	CameraCalibration* camCalib = new CameraCalibration();
+	Hand* hand = new Hand();
+
+	///camera calibration
+	//camCalib->cameraCalibrationProcess(cameraMatrix, distanceCoefficients);
+	//return 0;
 
 	//trainBlocks is the structure that contains all the blocks on the board
 	unordered_map<int, trainedBlock*> trainBlocks;
 
+	//tokens
+	std::vector<Token*> tokens;
+
 	//utilities for camera calibration
-	//findMarkers.loadCameraCalibration("CalibrationBlaster", cameraMatrix, distanceCoefficients); 
-	camCalib->loadCameraCalibration("CalibrationIntel", cameraMatrix, distanceCoefficients);
+	camCalib->loadCameraCalibration("IntelCalibration", cameraMatrix, distanceCoefficients);
+
+	int counter = 0;
 	
 	//all operations will be performed within this loop
 	while (true) 
 	{
-		int counter = 0;
+		
 		cv::Mat cameraFeed, cameraFeedT, bgr;
 		auto rgbStream = selection.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
 		auto height = rgbStream.height();
@@ -231,13 +341,7 @@ int main(int argc, char* argv[])
 			cvtColor(bgr, cameraFeed, cv::COLOR_BGR2RGB);
 			if (cv::waitKey(1000 / 60) >= 0) break;
 		}
-
-		/*display camera with correct orientation*/
-		//cv::transpose(cameraFeed, cameraFeedT);
-		//cv::transpose(cameraFeedT, cameraFeedT);
-		//cv::flip(cameraFeedT, cameraFeedT, -1);
-		/*****************************************/
-		
+	
 		//convert frame from BGR to HSV colorspace
 		cvtColor(cameraFeed, HSV, cv::COLOR_BGR2HSV);
 		//imshow("HSV", HSV);
@@ -249,23 +353,19 @@ int main(int argc, char* argv[])
 			//if in calibration mode, we track objects based on the HSV slider values
 			//this branch is implemented just for colors calibrating purposes
 			cv::inRange(HSV, cv::Scalar(colorCalib->H_MIN, colorCalib->S_MIN, colorCalib->V_MIN),
-							 cv::Scalar(colorCalib->H_MAX, colorCalib->S_MAX, colorCalib->V_MAX), threshold_block);
+							 cv::Scalar(colorCalib->H_MAX, colorCalib->S_MAX, colorCalib->V_MAX), threshold);
 
-			inRange(HSV, token->getHSVmin(), token->getHSVmax(), threshold_token); //black blocks
-			inRange(HSV, board->getHSVmin(), board->getHSVmax(), threshold_board); // board
-
-			cv::imshow("Threshold Block", threshold_block);
-			
+			cv::imshow("Threshold", threshold);	
 		}
 
 		else
 		{
 			trainedBlock* block = new trainedBlock();
 
-			//cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
 			inRange(HSV, block->getHSVmin(), block->getHSVmax(), threshold_block); // blocks
 			inRange(HSV, token->getHSVmin(), token->getHSVmax(), threshold_token); // tokens
 			inRange(HSV, board->getHSVmin(), board->getHSVmax(), threshold_board); // board
+			inRange(HSV, hand->getHSVmin(),  hand->getHSVmax(),  threshold_hand); // hand
 
 			morphOps(threshold_block);
 			morphOps(threshold_board);
@@ -275,16 +375,35 @@ int main(int argc, char* argv[])
 			board->identifyBoard(threshold_board);
 			detector->setBLine(board->getBottomLine());
 
-			if (counter == 0) detector->trackFilteredObject(threshold_block, cameraFeed, conf, trainBlocks);
-			counter = (++counter) % 45;
-			drawObject(trainBlocks, cameraFeed); 
+			if (counter == 0)
+			{
+				detector->trackFilteredObject(threshold_block, cameraFeed, cameraMatrix, distanceCoefficients, conf, trainBlocks);
+				tokens = detector->trackTokens(threshold_token);
+				detector->setUpFunctions(tokens, trainBlocks);
+			}
 
+			counter = (++counter) % 10;
+
+			
+			std::cout << "Tokens: " << tokens.size() << std::endl;
+
+			hand->findFinger(threshold_hand);
+			hand->calculateTipArea();
+
+			drawObject(trainBlocks, cameraFeed);
+			drawFinger(hand, cameraFeed);
+			drawTokens(tokens, cameraFeed);
+		
+			///Show frames 
+			//imshow("Block threshold", threshold_block);
+			//imshow("Token threshold", threshold_token);
+			//imshow("Board threshold", threshold_board);
+			//imshow("Hand threshold",  threshold_hand);
 		}
 
-		///Show frames 
-		//imshow("Block threshold", threshold_block);
-		//imshow("Token threshold", threshold_token);
-		//imshow("Board threshold", threshold_board);
+
+		if (hand->isDetected()) 
+			PlayWithGestures(hand, board, trainBlocks);
 
 		///Mouse params for callback
 		MouseParams* mp = new MouseParams();
@@ -292,11 +411,21 @@ int main(int argc, char* argv[])
 		mp->br = board->getBottom_right_corner();
 		mp->thresh_cycles = threshold_token; 
 
+		//given a fingertip point:
+		//create an area of block's size dimension, with the fingertip as the origin
+		//scan tBlocks to check which block is contained into that area, choose the closest one
+		//play that block
+
 		cv::namedWindow("Camera", cv::WINDOW_AUTOSIZE);
 		cv::setMouseCallback("Camera", CallBackBlocks, static_cast<void*>(mp));
 		cv::rectangle(cameraFeed, board->getBottomLine(), cv::Scalar(0, 0, 255), 4);
 
 		imshow("Camera", cameraFeed);
+
+
+		cout << "Identified Blocks: ";
+		for (auto it : trainBlocks) cout << it.first << " ";
+		cout << endl;
 
 		//delay 30ms so that screen can refresh.
 		//image will not appear without this waitKey() command

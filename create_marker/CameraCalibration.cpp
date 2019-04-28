@@ -78,7 +78,7 @@ void CameraCalibration::getChessboardCorners(std::vector<cv::Mat> images, std::v
 	for (std::vector<cv::Mat>::iterator iter = images.begin(); iter != images.end(); iter++)
 	{
 		std::vector<cv::Point2f> pointBuf; //buffer to store all the corners
-		bool found = cv::findChessboardCorners(*iter, cv::Size(9,6), pointBuf, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
+		bool found = cv::findChessboardCorners(*iter, cv::Size(6,9), pointBuf, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
 
 		if (found)	allFoundCorners.push_back(pointBuf);
 
@@ -91,7 +91,7 @@ void CameraCalibration::getChessboardCorners(std::vector<cv::Mat> images, std::v
 	}
 }
 
-void CameraCalibration::camera_calibration(std::vector<cv::Mat> calibrationImages, cv::Size boardSize, float squareEdgeLength, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients)
+void CameraCalibration::camera_calibration(std::vector<cv::Mat>& calibrationImages, cv::Size boardSize, float squareEdgeLength, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients)
 {
 	std::vector<std::vector<cv::Point2f>> checkerboardImageSpacePoints;
 	getChessboardCorners(calibrationImages, checkerboardImageSpacePoints, false);
@@ -199,7 +199,7 @@ bool CameraCalibration::loadCameraCalibration(std::string name, cv::Mat & camera
 	return false;
 }
 
-void CameraCalibration::cameraCalibrationProcess(cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients)
+void CameraCalibration::cameraCalibrationProcess(cv::Mat& cameraMatrix, cv::Mat& distanceCoefficients)
 {
 	cv::Mat frame;
 	cv::Mat drawToFrame;
@@ -220,7 +220,7 @@ void CameraCalibration::cameraCalibrationProcess(cv::Mat & cameraMatrix, cv::Mat
 		std::vector<cv::Vec2f> foundPoints;
 		bool found = false;
 
-		//found = findChessboardCorners(frame, chessboardDimensions, foundPoints, CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_NORMALIZE_IMAGE | CALIB_CB_FAST_CHECK);
+		//found = findChessboardCorners(frame, chessboardDimensions, foundPoints, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE | cv::CALIB_CB_FAST_CHECK);
 		found = findChessboardCorners(frame, chessboardDimensions, foundPoints, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
 		frame.copyTo(drawToFrame);
 		drawChessboardCorners(drawToFrame, chessboardDimensions, foundPoints, found);
@@ -246,6 +246,7 @@ void CameraCalibration::cameraCalibrationProcess(cv::Mat & cameraMatrix, cv::Mat
 				cv::Mat temp;
 				frame.copyTo(temp);
 				savedImages.push_back(temp);
+				std::cout << savedImages.size() << std::endl;
 			}
 			break;
 		case 13:
@@ -254,13 +255,17 @@ void CameraCalibration::cameraCalibrationProcess(cv::Mat & cameraMatrix, cv::Mat
 			if (savedImages.size() > 15)
 			{
 				camera_calibration(savedImages, chessboardDimensions, calibrationSquareDimension, cameraMatrix, distanceCoefficients);
-				saveCameraCalibration("Calibration", cameraMatrix, distanceCoefficients);
+				std::cout << "saving" << std::endl;
+				saveCameraCalibration("IntelCalibration", cameraMatrix, distanceCoefficients);
+				std::cout << "saving calibration " << std::endl;
 			}
 			break;
 		case 27:
 			//esc button
+			std::cout << "exit" << std::endl;
 			//exit
 			return;
 		}
 	}
 }
+

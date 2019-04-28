@@ -8,15 +8,9 @@ trainedBlock::trainedBlock() : Block()
 	defined = false;
 	reference = true;
 	lastLine = false;
+	looping = new bool(false);
 
 	count = 0;
-
-	//type_list["variable"] = 0;
-	//type_list["function"] = 0;
-	//type_list["note"] = 0;
-	//type_list["bracket"] = 0;
-	//type_list["break"] = 0;
-
 	blocks = new set<trainedBlock*, xDecr>();
 	cycles = new int(0);
 }
@@ -26,8 +20,9 @@ trainedBlock::~trainedBlock()
 
 }
 
-trainedBlock::trainedBlock(const trainedBlock & _block)
+trainedBlock::trainedBlock(const trainedBlock & _block) : trainedBlock()
 {
+
 	setType(_block.getType());
 	setID(_block.getID());
 	setXPos(_block.getXPos());
@@ -41,8 +36,6 @@ trainedBlock::trainedBlock(const trainedBlock & _block)
 	setDefined(_block.isDefined());
 	setReference(_block.isAReference());
 
-
-	//type_list = _block.type_list;
 	count = 0;
 }
 

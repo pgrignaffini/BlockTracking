@@ -4,7 +4,7 @@
 
 Note::Note()
 {
-
+	trainedBlock();
 }
 
 
@@ -17,24 +17,9 @@ Note::Note(const trainedBlock &b) : trainedBlock(b)
 	Note::setID(b.getID());
 }
 
-Note::Note(char data)
-{
-	this->setNote(data);
-}
-
-char Note::getNote()
-{
-	return Note::note;
-}
-
 std::string Note::getAudioFile() const
 {
 	return Note::fileAudio;
-}
-
-void Note::setNote(char data)
-{
-	Note::note = data;
 }
 
 void Note::setAudioFile(string path)
@@ -67,7 +52,7 @@ void Note::loadSound(const std::string &path, int volume)
 		//LOG("Couldn't load audio sample: ", path);
 	}
 
-	Mix_VolumeChunk(chunk, volume);
+	else Mix_VolumeChunk(chunk, volume);
 }
 
 int Note::play(int channel)
