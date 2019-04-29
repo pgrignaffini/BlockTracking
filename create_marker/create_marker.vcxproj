@@ -111,7 +111,7 @@
       <AdditionalIncludeDirectories>C:\Users\Paolo Grignaffini\Documents\Visual Studio 2015\Projects\create_marker\create_marker\sfml\include;C:\Program Files %28x86%29\Intel RealSense SDK 2.0\include;C:\Users\Paolo Grignaffini\Documents\Visual Studio 2015\Projects\create_marker\create_marker;C:\Users\Paolo Grignaffini\Documents\opencv\opencvDirs\opencvX\install\include;$(OPENCV_DIR)\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <OpenMPSupport>true</OpenMPSupport>
-      <ExceptionHandling>Async</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

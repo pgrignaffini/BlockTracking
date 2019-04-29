@@ -165,7 +165,11 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 		for (auto it : blocks)
 		{
 			blockPos = cv::Point(it.second->getXPos(), it.second->getYPos());
-			if (tipArea.contains(blockPos)) clicked = it.second;
+			if (tipArea.contains(blockPos))
+			{
+				clicked = it.second;
+				break;
+			}
 		}
 
 		if (clicked != nullptr)

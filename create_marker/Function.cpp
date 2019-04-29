@@ -2,9 +2,9 @@
 #include "stdafx.h"
 #include "Function.h"
 
-Function::Function()
+Function::Function() : trainedBlock()
 {
-	trainedBlock();
+	range = cv::Rect2f();
 }
 
 Function::~Function()
@@ -17,7 +17,7 @@ Function::Function(const trainedBlock &b) : trainedBlock(b)
 	range = cv::Rect2f();
 }
 
-set<trainedBlock*, xDecr>* Function::getBlocks() const
+set<trainedBlock*, xDecr> Function::getBlocks() const
 {
 	return Function::blocks;
 }
@@ -27,7 +27,7 @@ cv::Rect2f Function::getRange()
 	return Function::range;
 }
 
-void Function::setBlocks(set<trainedBlock*, xDecr>* _blocks)
+void Function::setBlocks(set<trainedBlock*, xDecr> _blocks)
 {
 	Function::blocks = _blocks;
 }
@@ -39,7 +39,7 @@ void Function::setRange(cv::Rect2f _range)
 
 void Function::addBlock(trainedBlock* block)
 {
-	Function::blocks->insert(block);
+	Function::blocks.insert(block);
 }
 
 bool Function::firstInLine()
@@ -56,7 +56,7 @@ int Function::play(int channel)
 
 	//int ncycles = *getCycles();
 
-	for (auto it : *blocks)
+	for (auto it : blocks)
 	{
 		type = it->getType();
 
@@ -66,14 +66,16 @@ int Function::play(int channel)
 	for (auto it : toDelete)
 	{
 		delete it;
-		blocks->erase(it);
+		blocks.erase(it);
 	}
+
 
 	do
 	{
-		if (!blocks->empty())
+		if (!blocks.empty())
 		{
-			for (auto it : *blocks)
+
+			for (auto it : blocks)
 			{
 				try
 				{
@@ -90,18 +92,7 @@ int Function::play(int channel)
 
 	} while (*looping);
 	
-	/*
-	for (int j = 0; j < ncycles; j++)
-	{
-		for (auto it : *blocks)
-		{
-			it->play(channel);
-			while(Mix_Playing(channel)) {} //wait for the sound to finish playing before playing another one
-		}
-	}*/
-
 	return channel;
-	
 }
 
 cv::Rect2f Function::findRange(cv::Point2f br)
@@ -123,17 +114,17 @@ void Function::printRange(cv::Mat cameraFeed)
 	cv::rectangle(cameraFeed, getRange(), cv::Scalar(0, 255, 0));
 }
 
-void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblocks)
+void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*> tblocks)
 {
 	if (isAReference()) return;
 
-	cv::Rect2f range = findRange(br);
-	cv::Point2f block_center;
+	cv::Rect range = findRange(br);
+	cv::Point block_center;
 
 	for (auto it : tblocks)
 	{
 		trainedBlock* current = it.second;
-		block_center = cv::Point2f(current->getXPos(), current->getYPos());
+		block_center = cv::Point(current->getXPos(), current->getYPos());
 
 		if (range.contains(block_center))
 		{
@@ -142,7 +133,7 @@ void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& tblo
 	}
 
 	cout << "Function: " << getID() << " contains ";
-	for (auto it : *blocks) cout << it->getID() << " ";
+	for (auto it : blocks) cout << it->getID() << " ";
 	cout << endl;
 }
 

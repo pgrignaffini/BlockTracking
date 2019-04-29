@@ -6,6 +6,14 @@ Board::Board()
 {
 	setHSVmin(cv::Scalar(50, 0, 100)); //gray
 	setHSVmax(cv::Scalar(256, 256, 256)); //gray
+	bottom_right_corner = cv::Point();
+	bottom_left_corner = cv::Point();
+	top_left_corner = cv::Point();
+	top_right_corner = cv::Point();
+	bottom_line = cv::Rect();
+	board_contours = std::vector<std::vector<cv::Point>>();
+	board_hierarchy = std::vector<cv::Vec4i>();
+	rectpoints = new cv::Point2f();
 }
 
 

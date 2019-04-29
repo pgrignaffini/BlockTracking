@@ -7,6 +7,10 @@ using namespace cv;
 
 BlockDetector::BlockDetector()
 {
+	IDs = std::vector<int>(); 
+	markerCorners = std::vector<std::vector<cv::Point2f>>();
+	bline = cv::Rect();
+	int changeCounter = 0;
 	feed = new CameraCalibration();
 }
 
@@ -484,7 +488,6 @@ void BlockDetector::setUpFunctions(std::vector<Token*> tokens, unordered_map<int
 			bool foundLoop = false;
 			if (b.second->getType() == "function" && !b.second->isAReference())
 			{
-				std::cout << b.second->getID() << std::endl;
 				for (auto t : tokens)
 				{
 					if (b.second->getYPos() - (BLOCK_HEIGHT / 2) <= t->getYPos() && t->getYPos() <= b.second->getYPos() + (BLOCK_HEIGHT / 2))

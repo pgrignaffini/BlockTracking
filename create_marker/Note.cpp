@@ -2,9 +2,11 @@
 #include "stdafx.h"
 #include "Note.h"
 
-Note::Note()
+Note::Note() : trainedBlock()
 {
-	trainedBlock();
+	fileAudio = std::string();
+	config = new ConfigurationManager(fileAudio);
+	chunk = new Mix_Chunk();
 }
 
 
@@ -14,7 +16,9 @@ Note::~Note()
 
 Note::Note(const trainedBlock &b) : trainedBlock(b)
 {
-	Note::setID(b.getID());
+	fileAudio = std::string();
+	config = new ConfigurationManager(fileAudio);
+	chunk = new Mix_Chunk();
 }
 
 std::string Note::getAudioFile() const

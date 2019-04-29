@@ -15,7 +15,7 @@ private:
 	std::vector<std::vector<cv::Point2f>> markerCorners; //identified aruco ids' corners
 	cv::Rect bline; //board's bottom line
 	CameraCalibration* feed; //detection depends on specified camera calibration
-	int changeCounter = 0;
+	int changeCounter;
 
 public:
 	BlockDetector();

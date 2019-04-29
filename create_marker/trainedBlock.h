@@ -27,13 +27,13 @@ public:
 	bool* looping;
 	
 	unordered_map<string, int> type_list;
-	set<trainedBlock*, xDecr>* blocks;
+	set<trainedBlock*, xDecr> blocks;
 
 	trainedBlock(); 
 	~trainedBlock();
 	trainedBlock(const trainedBlock & _block);
 
-	void setBlocks(set<trainedBlock*, xDecr>* _blocks);
+	void setBlocks(set<trainedBlock*, xDecr> _blocks);
 	void setDefined(bool def);
 	void setTrained(bool train);
 	void setReference(bool ref);
@@ -58,9 +58,9 @@ public:
 	virtual int play(int channel);
 	virtual void playParallel();
 	virtual cv::Rect2f findRange(cv::Point2f br);
-	virtual void findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& blocks);
+	virtual void findNotes(cv::Point2f br, unordered_map<int, trainedBlock*> blocks);
 	virtual void printRange(cv::Mat cameraFeed);
 	virtual void countCycles(cv::Mat threshold); //implemented only in Function.cpp
-	virtual set<trainedBlock*, xDecr>* getBlocks() const;
+	virtual set<trainedBlock*, xDecr> getBlocks() const;
 };
 

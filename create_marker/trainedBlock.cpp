@@ -11,7 +11,7 @@ trainedBlock::trainedBlock() : Block()
 	looping = new bool(false);
 
 	count = 0;
-	blocks = new set<trainedBlock*, xDecr>();
+	blocks = set<trainedBlock*, xDecr>();
 	cycles = new int(0);
 }
 
@@ -39,7 +39,7 @@ trainedBlock::trainedBlock(const trainedBlock & _block) : trainedBlock()
 	count = 0;
 }
 
-void trainedBlock::setBlocks(set<trainedBlock*, xDecr>* _blocks)
+void trainedBlock::setBlocks(set<trainedBlock*, xDecr> _blocks)
 {
 	trainedBlock::blocks = _blocks;
 }
@@ -157,7 +157,7 @@ cv::Rect2f trainedBlock::findRange(cv::Point2f br)
 	return cv::Rect2f();
 }
 
-void trainedBlock::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*>& blocks)
+void trainedBlock::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*> blocks)
 {
 }
 
@@ -169,7 +169,7 @@ void trainedBlock::countCycles(cv::Mat threshold)
 {
 }
 
-set<trainedBlock*, xDecr>* trainedBlock::getBlocks() const
+set<trainedBlock*, xDecr> trainedBlock::getBlocks() const
 {
 	return trainedBlock::blocks;
 }
