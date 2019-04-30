@@ -375,16 +375,19 @@ bool BlockDetector::checkIfReference(unordered_map<int, trainedBlock*>& tBlocks,
 		{
 			try
 			{
-				found = tBlocks.at(depsOf[i]); //check all ids associated to block *tb (except its own)
-				x_current = found->getXPos();
-				y_current = found->getYPos();
-				//std:cout << "Found = " << found->getID() << " " << x_current << " " << y_current << std::endl;
-
-				if (x_current < x_min && y_current < y_min)
+				if (tBlocks.find(depsOf[i]) != tBlocks.end())
 				{
-					x_min = x_current;
-					y_min = y_current;
-					firstOfItsKind = found;
+					found = tBlocks.at(depsOf[i]); //check all ids associated to block *tb (except its own)
+					x_current = found->getXPos();
+					y_current = found->getYPos();
+					//std:cout << "Found = " << found->getID() << " " << x_current << " " << y_current << std::endl;
+
+					if (x_current < x_min && y_current < y_min)
+					{
+						x_min = x_current;
+						y_min = y_current;
+						firstOfItsKind = found;
+					}
 				}
 				
 			}
@@ -690,4 +693,28 @@ void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat& cameraFeed, 
 	if (!objectFound) putText(cameraFeed, "TOO MUCH NOISE! ADJUST FILTER", cv::Point(0, 50), 1, 2, cv::Scalar(0, 0, 255), 2);
 
 	return;
+}
+
+void BlockDetector::updateBlocks(unordered_map<int, trainedBlock*>& tBlocks)
+{
+	string type;
+	vector<trainedBlock*> toDelete;
+
+	for (auto it : tBlocks)
+	{
+		type = it.second->getType();
+		if (type == "canc") toDelete.push_back(it.second);
+	}
+
+	for (auto it : toDelete)
+	{
+		for (auto b : tBlocks)
+		{
+			if (b.second->getID() == it->getID())
+			{
+				delete b.second;
+				tBlocks.erase(b.second->getID());
+			}
+		}
+	}
 }

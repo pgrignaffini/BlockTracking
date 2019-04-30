@@ -63,7 +63,7 @@ int Note::play(int channel)
 {	
 	//if (channel == -1) pick the first free unreserved channel
 	
-	channel = Mix_PlayChannel(channel, chunk, 0); 
+	Mix_PlayChannel(channel, chunk, 0); 
 
 	cout << "Note " << getID() << " plays " << this->getAudioFile() << " on channel " << channel << endl;
 	

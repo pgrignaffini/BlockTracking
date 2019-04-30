@@ -21,6 +21,7 @@
 #include <opencv2\core\types.hpp>
 #include <opencv2\imgcodecs.hpp>
 #include <opencv2\calib3d.hpp>
+#include "opencv2/opencv.hpp"
 
 
 #include <librealsense2/rs.hpp>

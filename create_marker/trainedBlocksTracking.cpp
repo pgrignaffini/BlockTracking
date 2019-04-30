@@ -74,6 +74,19 @@ std::vector<trainedBlock*> getParallelBlocks(unordered_map<int, trainedBlock*>& 
 	return inParallel; 
 }
 
+void playInParallel(std::vector<trainedBlock*> inParallel)
+{
+	//play in parallel
+	#pragma omp parallel for
+	for (int i = 0; i < inParallel.size(); i++)
+	{
+		cout << "Playing parallel " << endl;
+		cout << inParallel.at(i)->getID() << " ";
+		inParallel.at(i)->play(-1);
+	}
+	
+}
+
 void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 {
 	MouseParams* mp = static_cast<MouseParams*>(userdata);
@@ -87,7 +100,7 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 		{
 			try 
 			{
-				int channel = distr(generator);
+				int channel = distr(generator); //returns random number between [0...N_CHANNEL[
 				while (Mix_Playing(channel))
 				{
 					channel++; //make sure the channel is not already in use
@@ -118,14 +131,9 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 
 		std::vector<trainedBlock*> inParallel = getParallelBlocks(mp->blocks);
 
-		//play in parallel
-		#pragma omp parallel for
-		for (int i = 0; i < inParallel.size(); i++)
-		{
-			cout << "Playing parallel " << endl;
-			cout << inParallel.at(i)->getID() << " ";
-			inParallel.at(i)->play(i);
-		}	
+		std::thread t(playInParallel, inParallel);
+		t.detach();
+
 	}
 
 	else if (event == cv::EVENT_MBUTTONDOWN)
@@ -133,6 +141,8 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 		Mix_HaltChannel(-1); //halts all channels
 	}
 }
+
+
 
 void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*> blocks)
 {	
@@ -273,28 +283,10 @@ void drawFinger(Hand* hand, cv::Mat &frame)
 }
 
 
-void morphOps(cv::Mat &thresh)
+void morphOps(cv::Mat &thresh, int n_erodes, int n_dilates)
 {
-	//create structuring element that will be used to "dilate" and "erode" image.
-	//the element chosen here is a 3px by 3px rectangle
-	cv::Mat erodeElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-	//dilate with larger element so make sure object is visible
-	cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
-
-	dilate(thresh, thresh, dilateElement);
-	dilate(thresh, thresh, dilateElement);
-
-	erode(thresh, thresh, erodeElement);
-	erode(thresh, thresh, erodeElement);
-
-	cv::Mat erodeElement2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2));
-	cv::Mat dilateElement2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-
-	erode(thresh, thresh, erodeElement2);
-	erode(thresh, thresh, erodeElement2);
-
-	dilate(thresh, thresh, dilateElement2);
-	dilate(thresh, thresh, dilateElement2);
+	for (int i = 0; i < n_erodes; i++) erode(thresh, thresh, cv::Mat());
+	for (int i = 0; i < n_dilates; i++) dilate(thresh, thresh, cv::Mat());
 }
 
 int main(int argc, char* argv[])
@@ -322,7 +314,7 @@ int main(int argc, char* argv[])
 	rs2::context rsCtx;
 	auto list = rsCtx.query_devices();
 	rs2::device rsCam = list.front();
-	rs2::pipeline pipe;
+	rs2::pipeline pipe = rs2::pipeline();
 	rs2::pipeline_profile selection = pipe.start();
 
 	//Matrix to store each frame of the webcam feed
@@ -396,42 +388,52 @@ int main(int argc, char* argv[])
 			inRange(HSV, board->getHSVmin(), board->getHSVmax(), threshold_board); // board
 			inRange(HSV, hand->getHSVmin(),  hand->getHSVmax(),  threshold_hand); // hand
 
-			morphOps(threshold_block);
-			morphOps(threshold_board);
-			//no need for morphOps on threshold_plus because we're only interested on the number of plus blocks
-			//not on shape or contours
+			morphOps(threshold_block, 1, 3);
+			morphOps(threshold_board, 1, 3);
+			morphOps(threshold_token, 3, 4);
 
-			board->identifyBoard(threshold_board);
-			detector->setBLine(board->getBottomLine());
 
 			if (counter == 0)
+			{
+				board->identifyBoard(threshold_board);
+				detector->setBLine(board->getBottomLine());
+			}
+			
+			if (counter == 2)
 			{
 				detector->trackFilteredObject(threshold_block, cameraFeed, cameraMatrix, distanceCoefficients, conf, trainBlocks);
 			}
 
-			if (counter == 2)
+			if (counter == 4)
 			{
 				tokens = detector->trackTokens(threshold_token);
 				detector->setUpFunctions(tokens, trainBlocks);
 			}
 
+			if (counter == 6)
+			{
+				detector->updateBlocks(trainBlocks);
+			}
+
 			counter = (++counter) % 10;
 
-			
 			std::cout << "Tokens: " << tokens.size() << std::endl;
 
-			hand->findFinger(threshold_hand);
-			hand->calculateTipArea();
+			//hand->findFinger(threshold_hand);
+			//hand->calculateTipArea();
 
 			drawObject(trainBlocks, cameraFeed);
-			drawFinger(hand, cameraFeed);
+			//drawFinger(hand, cameraFeed);
 			drawTokens(tokens, cameraFeed);
 		
 			///Show frames 
-			//imshow("Block threshold", threshold_block);
-			//imshow("Token threshold", threshold_token);
-			//imshow("Board threshold", threshold_board);
+			imshow("Block threshold", threshold_block);
+			imshow("Token threshold", threshold_token);
+			imshow("Board threshold", threshold_board);
 			//imshow("Hand threshold",  threshold_hand);
+			///display window with board
+			//printBoard(threshold_board);
+
 		}
 
 

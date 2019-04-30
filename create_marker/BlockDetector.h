@@ -35,6 +35,7 @@ public:
 	int findIdentifier(cv::InputArrayOfArrays _corners, cv::InputArray _ids, int xm, int ym);
 	void check_for_changes(unordered_map<int, trainedBlock*>& tBlocks);
 	void trackFilteredObject(cv::Mat threshold, cv::Mat & cameraFeed, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients, ConfigurationManager * config, unordered_map<int, trainedBlock*>& tBlocks);
+	void updateBlocks(unordered_map<int, trainedBlock*>& tBlocks);
 	void findCorners(cv::Mat & cameraFeed, cv::Mat & cameraMatrix, cv::Mat & distanceCoefficients);
 	std::string detectType(std::vector<std::vector<cv::Point>>& contours, int i);
 	trainedBlock* findObject(cv::Mat threshold, std::unordered_map<int, trainedBlock*>&  tBlocks, ConfigurationManager* config);

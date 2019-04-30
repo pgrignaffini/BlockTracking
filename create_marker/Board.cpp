@@ -154,8 +154,7 @@ void Board::identifyBoard(cv::Mat threshold_board)
 		setBottom_line(bline);
 		///display bottom line
 		//cv::rectangle(window, bline, cv::Scalar(0, 0, 255), 4);
-		///display window with board
-		printBoard(threshold_board);
+		
 		return;
 
 	}

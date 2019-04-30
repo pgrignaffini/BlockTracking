@@ -56,26 +56,34 @@ int Function::play(int channel)
 
 	//int ncycles = *getCycles();
 
-	for (auto it : blocks)
+	vector<trainedBlock*> toPlay;
+	std::copy(blocks.begin(), blocks.end(), std::back_inserter(toPlay));
+
+	/*
+	for (auto it : toPlay)
 	{
 		type = it->getType();
-
 		if (type == "canc") toDelete.push_back(it);
 	}
 
 	for (auto it : toDelete)
 	{
-		delete it;
-		blocks.erase(it);
-	}
-
+		for (vector<trainedBlock*>::iterator b = toPlay.begin(); b != toPlay.end(); b++)
+		{
+			if ((*b)->getID() == it->getID())
+			{
+				delete (*b);
+				toPlay.erase(b);
+				blocks.erase(it);
+			}
+		}
+	}*/
 
 	do
 	{
-		if (!blocks.empty())
+		if (!toPlay.empty())
 		{
-
-			for (auto it : blocks)
+			for (auto it : toPlay)
 			{
 				try
 				{

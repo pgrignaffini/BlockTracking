@@ -9,7 +9,6 @@ trainedBlock::trainedBlock() : Block()
 	reference = true;
 	lastLine = false;
 	looping = new bool(false);
-
 	count = 0;
 	blocks = set<trainedBlock*, xDecr>();
 	cycles = new int(0);
@@ -22,7 +21,6 @@ trainedBlock::~trainedBlock()
 
 trainedBlock::trainedBlock(const trainedBlock & _block) : trainedBlock()
 {
-
 	setType(_block.getType());
 	setID(_block.getID());
 	setXPos(_block.getXPos());
@@ -31,12 +29,9 @@ trainedBlock::trainedBlock(const trainedBlock & _block) : trainedBlock()
 	setHSVmax(_block.getHSVmax());
 	setBlocks(_block.getBlocks());
 	setCycles(_block.getCycles());
-
 	setTrained(_block.isTrained());
 	setDefined(_block.isDefined());
 	setReference(_block.isAReference());
-
-	count = 0;
 }
 
 void trainedBlock::setBlocks(set<trainedBlock*, xDecr> _blocks)
