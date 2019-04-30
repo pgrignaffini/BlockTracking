@@ -65,7 +65,7 @@ int Note::play(int channel)
 	
 	Mix_PlayChannel(channel, chunk, 0); 
 
-	cout << "Note " << getID() << " plays " << this->getAudioFile() << " on channel " << channel << endl;
+	cout << "Note " << getID() << " plays " << getAudioFile() << " on channel " << channel << endl;
 	
 	return channel;
 }

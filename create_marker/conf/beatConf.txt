@@ -13,3 +13,9 @@
 12:res/sounds/Beats/beat6/crystal.wav
 13:res/sounds/Beats/beat6/early.wav
 14:res/sounds/Beats/beat6/wheels.wav
+15:res/sounds/Beats/beatDouble/altered.wav
+16:res/sounds/Beats/beatDouble/aurora.wav
+17:res/sounds/Beats/beatDouble/disco.wav
+18:res/sounds/Beats/beatDouble/empire.wav
+19:res/sounds/Beats/beatDouble/luminosity.wav
+20:res/sounds/Beats/beatDouble/zippy.wav

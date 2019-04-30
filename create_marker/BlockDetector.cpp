@@ -665,8 +665,6 @@ void BlockDetector::check_for_changes(unordered_map<int, trainedBlock*>& tBlocks
 			auto it = tBlocks.find(saved.at(i));
 			id = it->first;
 			it->second->setType("canc"); //needed for deleting inside the blocks, see play() function
-			cout << id << " not found, erasing..." << endl;
-			tBlocks.erase(id);
 		}
 	}
 
@@ -695,26 +693,44 @@ void BlockDetector::trackFilteredObject(cv::Mat threshold, cv::Mat& cameraFeed, 
 	return;
 }
 
+//remove blocks no longer on board
 void BlockDetector::updateBlocks(unordered_map<int, trainedBlock*>& tBlocks)
 {
-	string type;
-	vector<trainedBlock*> toDelete;
+	std::vector<trainedBlock*> toDelete;
 
-	for (auto it : tBlocks)
+	for (auto b : tBlocks)
 	{
-		type = it.second->getType();
-		if (type == "canc") toDelete.push_back(it.second);
+		if (b.second->getType() == "canc") toDelete.push_back(b.second);
 	}
 
-	for (auto it : toDelete)
+	for (auto b : toDelete)
 	{
-		for (auto b : tBlocks)
+		cout << b->getID() << " not found, erasing..." << endl;
+		tBlocks.erase(b->getID());
+	}
+	
+
+	for (auto b : tBlocks)
+	{
+		for (auto d : toDelete)
 		{
-			if (b.second->getID() == it->getID())
+			if (b.second->getType() == "function")
 			{
-				delete b.second;
-				tBlocks.erase(b.second->getID());
+				for (auto it = b.second->blocks.begin(); it != b.second->blocks.end();) 
+				{
+					if ((*it)->getID() == d->getID()) 
+					{
+						it = b.second->blocks.erase(it);
+					}
+
+					else 
+					{
+						++it;
+					}
+				}
 			}
+			
 		}
 	}
+	
 }

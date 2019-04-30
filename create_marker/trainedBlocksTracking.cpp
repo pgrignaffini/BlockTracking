@@ -14,6 +14,8 @@
 bool calibrationMode = false;
 //number of channels 
 const int N_CHANNEL = 32;
+//configuration file
+const string CONF = "conf/beatConf.txt";
 
 //random channel number generator
 std::random_device                  rand_dev;
@@ -100,21 +102,10 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 		{
 			try 
 			{
-				int channel = distr(generator); //returns random number between [0...N_CHANNEL[
-				while (Mix_Playing(channel))
-				{
-					channel++; //make sure the channel is not already in use
-					if (channel >= N_CHANNEL) channel = 0;
-				}
-
 				clicked->findNotes(mp->br, mp->blocks);
 				
-				if (clicked->looping)
-				{
-					std::thread t(&trainedBlock::play, clicked, channel);
-					t.detach();
-				}
-				else clicked->play(channel);
+				std::thread t(&trainedBlock::play, clicked, -1);
+				t.detach();	
 			}
 
 			catch (std::exception & exc)
@@ -127,18 +118,18 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 	else if (event == cv::EVENT_LBUTTONDOWN)
 	{
 		std::cout << "LBUTTON clicked" << endl;
-		Mix_HaltChannel(-1); //halts all channels
+		Mix_ExpireChannel(-1, 10); //halts all channels
 
 		std::vector<trainedBlock*> inParallel = getParallelBlocks(mp->blocks);
 
 		std::thread t(playInParallel, inParallel);
 		t.detach();
-
 	}
 
 	else if (event == cv::EVENT_MBUTTONDOWN)
 	{
-		Mix_HaltChannel(-1); //halts all channels
+		cout << "Halt button pressed" << endl;
+		Mix_ExpireChannel(-1, 10); //halts all channels
 	}
 }
 
@@ -156,18 +147,12 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 
 	if (bline.contains(fingerTip))
 	{
-		Mix_HaltChannel(-1); //halts all channels
+		Mix_ExpireChannel(-1, 10); //halts all channels
 
 		std::vector<trainedBlock*> inParallel = getParallelBlocks(blocks);
 
-		//play in parallel
-		#pragma omp parallel for
-		for (int i = 0; i < inParallel.size(); i++)
-		{
-			cout << "Playing parallel " << endl;
-			cout << inParallel.at(i)->getID() << " ";
-			inParallel.at(i)->play(i);
-		}
+		std::thread t(playInParallel, inParallel);
+		t.detach();
 	}
 
 	else
@@ -186,21 +171,10 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 		{
 			try
 			{
-				int channel = distr(generator);
-				while (Mix_Playing(channel))
-				{
-					channel++; //make sure the channel is not already in use
-					if (channel >= N_CHANNEL) channel = 0;
-				}
-
 				clicked->findNotes(br, blocks);
-				
-				if (clicked->looping)
-				{
-					std::thread t(&trainedBlock::play, clicked, channel);
-					t.detach();
-				}
-				else clicked->play(channel);
+
+				std::thread t(&trainedBlock::play, clicked, -1);
+				t.detach();
 			}
 
 			catch (std::exception & exc)
@@ -216,7 +190,7 @@ void printObjects(unordered_map<int, trainedBlock*> blocks)
 {
 	trainedBlock* block;
 
-	for (auto& it : blocks)
+	for (auto it : blocks)
 	{
 		block = it.second;
 		std::cout << "Block " << block->getID() << ": " << block->getType() << std::endl;
@@ -298,7 +272,7 @@ int main(int argc, char* argv[])
 		colorCalib->createTrackbars();
 	}
 
-	ConfigurationManager* conf = new ConfigurationManager("conf/beatConf.txt", "conf/deps.txt");
+	ConfigurationManager* conf = new ConfigurationManager(CONF, "conf/deps.txt");
 	conf->loadConf();
 	conf->loadDeps();
 
@@ -393,7 +367,7 @@ int main(int argc, char* argv[])
 			morphOps(threshold_token, 3, 4);
 
 
-			if (counter == 0)
+			if (counter%8 == 0)
 			{
 				board->identifyBoard(threshold_board);
 				detector->setBLine(board->getBottomLine());
@@ -404,18 +378,18 @@ int main(int argc, char* argv[])
 				detector->trackFilteredObject(threshold_block, cameraFeed, cameraMatrix, distanceCoefficients, conf, trainBlocks);
 			}
 
-			if (counter == 4)
+			if (counter%4 == 0)
 			{
 				tokens = detector->trackTokens(threshold_token);
 				detector->setUpFunctions(tokens, trainBlocks);
 			}
 
-			if (counter == 6)
+			if (counter%6 == 0)
 			{
 				detector->updateBlocks(trainBlocks);
 			}
 
-			counter = (++counter) % 10;
+			counter = (++counter) % 20;
 
 			std::cout << "Tokens: " << tokens.size() << std::endl;
 
@@ -427,12 +401,12 @@ int main(int argc, char* argv[])
 			drawTokens(tokens, cameraFeed);
 		
 			///Show frames 
-			imshow("Block threshold", threshold_block);
-			imshow("Token threshold", threshold_token);
-			imshow("Board threshold", threshold_board);
+			//imshow("Block threshold", threshold_block);
+			//imshow("Token threshold", threshold_token);
+			//imshow("Board threshold", threshold_board);
 			//imshow("Hand threshold",  threshold_hand);
 			///display window with board
-			//printBoard(threshold_board);
+			//board->printBoard(threshold_board);
 
 		}
 
@@ -446,13 +420,11 @@ int main(int argc, char* argv[])
 		mp->br = board->getBottom_right_corner();
 		mp->thresh_cycles = threshold_token; 
 
-
 		cv::namedWindow("Camera", cv::WINDOW_AUTOSIZE);
 		cv::setMouseCallback("Camera", CallBackBlocks, static_cast<void*>(mp));
 		cv::rectangle(cameraFeed, board->getBottomLine(), cv::Scalar(0, 0, 255), 4);
 
 		imshow("Camera", cameraFeed);
-
 
 		cout << "Identified Blocks: ";
 		for (auto it : trainBlocks) cout << it.first << " ";

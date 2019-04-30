@@ -22,6 +22,7 @@ set<trainedBlock*, xDecr> Function::getBlocks() const
 	return Function::blocks;
 }
 
+
 cv::Rect2f Function::getRange()
 {
 	return Function::range;
@@ -51,33 +52,9 @@ int Function::play(int channel)
 {
 	cout << "Function " << getID() << " plays" << endl;
 	//cout << "Function " << getID() << " contains " << *getCycles() << " cycles" << endl;
-	string type;
-	vector<trainedBlock*> toDelete;
-
-	//int ncycles = *getCycles();
-
+	
 	vector<trainedBlock*> toPlay;
 	std::copy(blocks.begin(), blocks.end(), std::back_inserter(toPlay));
-
-	/*
-	for (auto it : toPlay)
-	{
-		type = it->getType();
-		if (type == "canc") toDelete.push_back(it);
-	}
-
-	for (auto it : toDelete)
-	{
-		for (vector<trainedBlock*>::iterator b = toPlay.begin(); b != toPlay.end(); b++)
-		{
-			if ((*b)->getID() == it->getID())
-			{
-				delete (*b);
-				toPlay.erase(b);
-				blocks.erase(it);
-			}
-		}
-	}*/
 
 	do
 	{
