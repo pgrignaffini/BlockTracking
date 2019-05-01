@@ -15,7 +15,7 @@ bool calibrationMode = false;
 //number of channels 
 const int N_CHANNEL = 32;
 //configuration file
-const string CONF = "conf/beatConf.txt";
+const string CONF = "conf/beatConf.txt";  
 
 //random channel number generator
 std::random_device                  rand_dev;
@@ -363,10 +363,9 @@ int main(int argc, char* argv[])
 			inRange(HSV, hand->getHSVmin(),  hand->getHSVmax(),  threshold_hand); // hand
 
 			morphOps(threshold_block, 1, 3);
-			morphOps(threshold_board, 1, 3);
+			morphOps(threshold_board, 4, 3);
 			morphOps(threshold_token, 3, 4);
-
-
+			
 			if (counter%8 == 0)
 			{
 				board->identifyBoard(threshold_board);
@@ -401,12 +400,10 @@ int main(int argc, char* argv[])
 			drawTokens(tokens, cameraFeed);
 		
 			///Show frames 
-			//imshow("Block threshold", threshold_block);
+			imshow("Block threshold", threshold_block);
 			//imshow("Token threshold", threshold_token);
-			//imshow("Board threshold", threshold_board);
+			imshow("Board threshold", threshold_board);
 			//imshow("Hand threshold",  threshold_hand);
-			///display window with board
-			//board->printBoard(threshold_board);
 
 		}
 

@@ -301,14 +301,7 @@ trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks,
 				delete(found->second); //delete pointed element
 				found->second = note;
 			}
-			/*
-			else if (type == "variable")
-			{
-				Variable* var = new Variable(*found->second);
-				delete(found->second);
-				found->second = var;
-			}*/
-
+			
 			else if (type == "function")
 			{
 				Function* func = new Function(*found->second);
@@ -489,7 +482,7 @@ void BlockDetector::setUpFunctions(std::vector<Token*> tokens, unordered_map<int
 		for (auto b : tBlocks)
 		{
 			bool foundLoop = false;
-			if (b.second->getType() == "function" && !b.second->isAReference())
+			if (b.second->getType() == "function")
 			{
 				for (auto t : tokens)
 				{
@@ -605,7 +598,6 @@ int BlockDetector::findIdentifier(InputArrayOfArrays _corners, InputArray _ids, 
 	{
 		
 		Mat currentMarker = _corners.getMat(i);
-		//CV_Assert(currentMarker.total() == 4 && currentMarker.type() == CV_32FC2);
 
 		if (_ids.total() != 0)
 		{		
@@ -621,6 +613,8 @@ int BlockDetector::findIdentifier(InputArrayOfArrays _corners, InputArray _ids, 
 			}
 		}
 	}
+
+	
 
 	return idFound;
 }

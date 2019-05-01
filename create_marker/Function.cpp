@@ -38,21 +38,11 @@ void Function::setRange(cv::Rect2f _range)
 	Function::range = _range;
 }
 
-void Function::addBlock(trainedBlock* block)
-{
-	Function::blocks.insert(block);
-}
-
-bool Function::firstInLine()
-{
-	return false;
-}
-
 int Function::play(int channel)
 {
 	cout << "Function " << getID() << " plays" << endl;
-	//cout << "Function " << getID() << " contains " << *getCycles() << " cycles" << endl;
 	
+	//mantain a local copy for data consistency
 	vector<trainedBlock*> toPlay;
 	std::copy(blocks.begin(), blocks.end(), std::back_inserter(toPlay));
 
@@ -73,6 +63,7 @@ int Function::play(int channel)
 					continue;
 				}
 			}
+
 		}
 
 	} while (*looping);
@@ -106,6 +97,8 @@ void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*> tbloc
 	cv::Rect range = findRange(br);
 	cv::Point block_center;
 
+	blocks.clear(); //avoid dangling pointers
+
 	for (auto it : tblocks)
 	{
 		trainedBlock* current = it.second;
@@ -113,7 +106,7 @@ void Function::findNotes(cv::Point2f br, unordered_map<int, trainedBlock*> tbloc
 
 		if (range.contains(block_center))
 		{
-			addBlock(current);
+			blocks.insert(current);
 		}
 	}
 

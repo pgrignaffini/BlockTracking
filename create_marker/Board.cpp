@@ -62,7 +62,7 @@ void Board::printBoard(cv::Mat threshold_board)
 
 	for (int j = 0; j < 4; j++)
 	{
-		line(drawing_board2, *(getRectPoints() + j), *(getRectPoints() + ((j + 1) % 4)), cv::Scalar(0, 255, 255), 1, 8);
+		line(drawing_board2, *(getRectPoints() + j), *(getRectPoints() + ((j + 1) % 4)), cv::Scalar(255, 255, 255), 3, 8);
 	}
 
 	///Display Board rectangle
@@ -154,7 +154,8 @@ void Board::identifyBoard(cv::Mat threshold_board)
 		setBottom_line(bline);
 		///display bottom line
 		//cv::rectangle(window, bline, cv::Scalar(0, 0, 255), 4);
-		
+		///display board
+		//printBoard(threshold_board);
 		return;
 
 	}
