@@ -50,11 +50,18 @@ int Function::play(int channel)
 	{
 		if (!toPlay.empty())
 		{
-			for (auto it : toPlay)
+			for (int i = 0; i < toPlay.size(); i++)
 			{
+				if (*interrupted)
+				{
+					*playing = false;
+					*interrupted = false;
+					return channel;
+				}
+
 				try
 				{
-					it->play(channel);
+					toPlay.at(i)->play(channel);
 					do {} while (Mix_Playing(channel)); //wait for the sound to finish playing before playing the next one
 				}
 				catch (...)
@@ -67,6 +74,9 @@ int Function::play(int channel)
 		}
 
 	} while (*looping);
+
+	*playing = false;
+	*interrupted = false;
 	
 	return channel;
 }

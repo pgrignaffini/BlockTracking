@@ -3,8 +3,8 @@
 
 Token::Token(cv::Point position)
 {
-	HSVmin = cv::Scalar(0, 80, 0); //black
-	HSVmax = cv::Scalar(256, 256, 30); //black 
+	HSVmin = cv::Scalar(0, 0, 0); //black
+	HSVmax = cv::Scalar(256, 256, 20); //black 
 	pos = position;
 }
 

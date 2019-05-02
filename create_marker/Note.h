@@ -27,7 +27,6 @@ private:
 	string fileAudio;
 	ConfigurationManager* config; 
 	Mix_Chunk* chunk;
-
 	
 };
 

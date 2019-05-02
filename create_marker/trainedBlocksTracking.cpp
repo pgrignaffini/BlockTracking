@@ -15,12 +15,12 @@ bool calibrationMode = false;
 //number of channels 
 const int N_CHANNEL = 32;
 //configuration file
-const string CONF = "conf/beatConf.txt";  
+const string CONF = "conf/pianoConf.txt";  
 
 //random channel number generator
 std::random_device                  rand_dev;
 std::mt19937                        generator(rand_dev());
-std::uniform_int_distribution<int>  distr(0, N_CHANNEL);
+std::uniform_int_distribution<int>  distr(0, N_CHANNEL - 1);
 
 struct MouseParams 
 {
@@ -76,15 +76,27 @@ std::vector<trainedBlock*> getParallelBlocks(unordered_map<int, trainedBlock*>& 
 	return inParallel; 
 }
 
+void haltAllChannels(unordered_map<int, trainedBlock*>& blocks)
+{
+	for (auto b : blocks)
+	{
+		if (b.second->getType() == "function" && b.second->isDefined())
+			*b.second->interrupted = true;
+	}
+
+	Mix_ExpireChannel(-1, 10); //halts all channels
+}
+
 void playInParallel(std::vector<trainedBlock*> inParallel)
 {
 	//play in parallel
+
 	#pragma omp parallel for
 	for (int i = 0; i < inParallel.size(); i++)
 	{
-		cout << "Playing parallel " << endl;
-		cout << inParallel.at(i)->getID() << " ";
-		inParallel.at(i)->play(-1);
+		std::cout << "Playing parallel " << endl;
+		std::cout << inParallel.at(i)->getID() << " ";
+		inParallel.at(i)->play(i);
 	}
 	
 }
@@ -92,6 +104,7 @@ void playInParallel(std::vector<trainedBlock*> inParallel)
 void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 {
 	MouseParams* mp = static_cast<MouseParams*>(userdata);
+	int channel = distr(generator);
 
 	if (event == cv::EVENT_RBUTTONDOWN)
 	{
@@ -104,8 +117,27 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 			{
 				clicked->findNotes(mp->br, mp->blocks);
 				
-				std::thread t(&trainedBlock::play, clicked, -1);
-				t.detach();	
+				if (!(*clicked->playing) && clicked->isDefined())
+				{
+					
+					while (Mix_Playing(channel)) //ensures channel is not already occupied
+					{
+						channel++;
+						if (channel >= (N_CHANNEL - 1)) channel = 0;
+					}
+
+					*clicked->playing = true;
+
+					std::thread t(&trainedBlock::play, clicked, channel);
+					t.detach();
+				}
+
+				else
+				{
+					std::cout << "Block " << clicked->getID() << " is already playing" << std::endl;
+					return;
+				}
+				
 			}
 
 			catch (std::exception & exc)
@@ -118,9 +150,15 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 	else if (event == cv::EVENT_LBUTTONDOWN)
 	{
 		std::cout << "LBUTTON clicked" << endl;
-		Mix_ExpireChannel(-1, 10); //halts all channels
+		haltAllChannels(mp->blocks);
 
 		std::vector<trainedBlock*> inParallel = getParallelBlocks(mp->blocks);
+
+		for (auto b : inParallel)
+		{
+			*b->playing = true;
+			*b->interrupted = false;
+		}
 
 		std::thread t(playInParallel, inParallel);
 		t.detach();
@@ -128,8 +166,8 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 
 	else if (event == cv::EVENT_MBUTTONDOWN)
 	{
-		cout << "Halt button pressed" << endl;
-		Mix_ExpireChannel(-1, 10); //halts all channels
+		std::cout << "Halt button pressed" << endl;
+		haltAllChannels(mp->blocks);
 	}
 }
 
@@ -144,6 +182,7 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 	cv::Rect bline = board->getBottomLine();
 	cv::Rect tipArea = hand->getTipArea();
 	cv::Point fingerTip = hand->getFinger();
+	int channel = distr(generator);
 
 	if (bline.contains(fingerTip))
 	{
@@ -151,8 +190,14 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 
 		std::vector<trainedBlock*> inParallel = getParallelBlocks(blocks);
 
+		for (auto b : inParallel)
+		{
+			*b->playing = true;
+			*b->interrupted = false;
+		}
+
 		std::thread t(playInParallel, inParallel);
-		t.detach();
+		t.detach();;
 	}
 
 	else
@@ -171,10 +216,26 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 		{
 			try
 			{
-				clicked->findNotes(br, blocks);
+				if (!(*clicked->playing) && clicked->isDefined())
+				{
 
-				std::thread t(&trainedBlock::play, clicked, -1);
-				t.detach();
+					while (Mix_Playing(channel)) //ensures channel is not already occupied
+					{
+						channel++;
+						if (channel >= (N_CHANNEL - 1)) channel = 0;
+					}
+
+					*clicked->playing = true;
+
+					std::thread t(&trainedBlock::play, clicked, channel);
+					t.detach();
+				}
+
+				else
+				{
+					std::cout << "Block " << clicked->getID() << " is already playing" << std::endl;
+					return;
+				}
 			}
 
 			catch (std::exception & exc)
@@ -278,7 +339,8 @@ int main(int argc, char* argv[])
 
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0)
 	{
-		// Error message if can't initialize
+		std::cout << "Audio module can not be loaded " << std::endl;
+		return 0;
 	}
 
 	// Amount of channels (Max amount of sounds playing at the same time)
@@ -364,31 +426,31 @@ int main(int argc, char* argv[])
 
 			morphOps(threshold_block, 1, 3);
 			morphOps(threshold_board, 4, 3);
-			morphOps(threshold_token, 3, 4);
+			morphOps(threshold_token, 4, 4);
 			
-			if (counter%8 == 0)
+			if (counter%11 == 0)
 			{
 				board->identifyBoard(threshold_board);
 				detector->setBLine(board->getBottomLine());
 			}
 			
-			if (counter == 2)
+			if (counter%15 == 0)
 			{
 				detector->trackFilteredObject(threshold_block, cameraFeed, cameraMatrix, distanceCoefficients, conf, trainBlocks);
 			}
 
-			if (counter%4 == 0)
+			if (counter%9 == 0)
 			{
 				tokens = detector->trackTokens(threshold_token);
 				detector->setUpFunctions(tokens, trainBlocks);
 			}
 
-			if (counter%6 == 0)
+			if (counter%10 == 0)
 			{
 				detector->updateBlocks(trainBlocks);
 			}
 
-			counter = (++counter) % 20;
+			counter = (++counter) % 30;
 
 			std::cout << "Tokens: " << tokens.size() << std::endl;
 
@@ -401,7 +463,7 @@ int main(int argc, char* argv[])
 		
 			///Show frames 
 			imshow("Block threshold", threshold_block);
-			//imshow("Token threshold", threshold_token);
+			imshow("Token threshold", threshold_token);
 			imshow("Board threshold", threshold_board);
 			//imshow("Hand threshold",  threshold_hand);
 
@@ -423,9 +485,9 @@ int main(int argc, char* argv[])
 
 		imshow("Camera", cameraFeed);
 
-		cout << "Identified Blocks: ";
-		for (auto it : trainBlocks) cout << it.first << " ";
-		cout << endl;
+		std::cout << "Identified Blocks: ";
+		for (auto it : trainBlocks) std::cout << it.first << " ";
+		std::cout << endl;
 
 		//delay 30ms so that screen can refresh.
 		//image will not appear without this waitKey() command

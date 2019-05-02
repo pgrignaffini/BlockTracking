@@ -1,5 +1,6 @@
 #pragma once
 #include "Block.h"
+#include "ConfigurationManager.h"
 #include <unordered_map>
 #include <set>
 
@@ -9,7 +10,6 @@ struct xDecr
 {
 	bool operator() (Block* var1, Block* var2) const  { return (var1->getXPos() < var2->getXPos()); }
 };
-
 
 class trainedBlock : public Block
 {
@@ -23,10 +23,11 @@ private:
 	
 
 public:
-	int count;
 	bool* looping;
+	bool* playing;
+	bool* interrupted;
+	int missingLoopCounter = 0;
 	
-	unordered_map<string, int> type_list;
 	set<trainedBlock*, xDecr> blocks;
 
 	trainedBlock(); 
@@ -38,6 +39,9 @@ public:
 	void setTrained(bool train);
 	void setReference(bool ref);
 	void setLastLine(bool ll);
+	void setLooping(bool* loop);
+	void setPlaying(bool* isPlaying);
+	void setInterruption(bool* interrupt);
 
 	bool isTrained() const;
 	bool isDefined() const;
@@ -51,8 +55,6 @@ public:
 	void incrementCycles();
 	/***************************************/
 
-
-	void addType(string t);
 	string max(unordered_map<string, int> list);
 	
 	virtual int play(int channel);
@@ -60,7 +62,8 @@ public:
 	virtual cv::Rect2f findRange(cv::Point2f br);
 	virtual void findNotes(cv::Point2f br, unordered_map<int, trainedBlock*> blocks);
 	virtual void printRange(cv::Mat cameraFeed);
-	virtual void countCycles(cv::Mat threshold); //implemented only in Function.cpp
+	virtual void countCycles(cv::Mat threshold); 
 	virtual set<trainedBlock*, xDecr> getBlocks() const;
+	virtual void setUpConf(ConfigurationManager* cm);
 };
 

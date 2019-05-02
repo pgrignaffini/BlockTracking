@@ -9,29 +9,28 @@ trainedBlock::trainedBlock() : Block()
 	reference = true;
 	lastLine = false;
 	looping = new bool(false);
-	count = 0;
 	blocks = set<trainedBlock*, xDecr>();
 	cycles = new int(0);
+	playing = new bool(false);
+	interrupted = new bool(false);
 }
 
 trainedBlock::~trainedBlock()
 {
-
+	
 }
 
-trainedBlock::trainedBlock(const trainedBlock & _block) : trainedBlock()
+trainedBlock::trainedBlock(const trainedBlock & _block) : Block(_block)
 {
-	setType(_block.getType());
-	setID(_block.getID());
-	setXPos(_block.getXPos());
-	setYPos(_block.getYPos());
-	setHSVmin(_block.getHSVmin());
-	setHSVmax(_block.getHSVmax());
-	setBlocks(_block.getBlocks());
-	setCycles(_block.getCycles());
 	setTrained(_block.isTrained());
 	setDefined(_block.isDefined());
 	setReference(_block.isAReference());
+	setLastLine(_block.isLastLine());
+	setLooping(_block.looping);
+	setBlocks(_block.getBlocks());
+	setCycles(_block.getCycles());
+	setPlaying(_block.playing);
+	setInterruption(_block.interrupted);
 }
 
 void trainedBlock::setBlocks(set<trainedBlock*, xDecr> _blocks)
@@ -57,6 +56,21 @@ void trainedBlock::setReference(bool ref)
 void trainedBlock::setLastLine(bool ll)
 {
 	trainedBlock::lastLine = ll;
+}
+
+void trainedBlock::setLooping(bool * loop)
+{
+	trainedBlock::looping = loop;
+}
+
+void trainedBlock::setPlaying(bool * isPlaying)
+{
+	trainedBlock::playing = isPlaying;
+}
+
+void trainedBlock::setInterruption(bool * interrupt)
+{
+	trainedBlock::interrupted = interrupt;
 }
 
 bool trainedBlock::isTrained() const
@@ -100,25 +114,6 @@ void trainedBlock::incrementCycles()
 	(*cycles)++;
 }
 
-
-void trainedBlock::addType(string t)
-{
-	if (t.empty()) return;
-
-	//setType(t); //overwrite 'X'
-	
-	type_list[t]+=1;
-	count+=1;
-
-	if (count == N_TRAINING)
-	{
-		trained = true;
-		setType(max(type_list));
-	}
-
-	return;
-
-}
 
 string trainedBlock::max(unordered_map<string, int> list)
 {
@@ -167,4 +162,8 @@ void trainedBlock::countCycles(cv::Mat threshold)
 set<trainedBlock*, xDecr> trainedBlock::getBlocks() const
 {
 	return trainedBlock::blocks;
+}
+
+void trainedBlock::setUpConf(ConfigurationManager * cm)
+{
 }

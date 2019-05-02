@@ -21,9 +21,8 @@ void Block::playASync()
 {
 }
 
-Block::Block(string type)
+Block::Block(string type) : Block()
 {
-	Block::Block();
 	setType(type);
 }
 

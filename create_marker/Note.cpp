@@ -12,6 +12,8 @@ Note::Note() : trainedBlock()
 
 Note::~Note()
 {
+	delete config;
+	delete chunk;
 }
 
 Note::Note(const trainedBlock &b) : trainedBlock(b)
@@ -62,10 +64,11 @@ void Note::loadSound(const std::string &path, int volume)
 int Note::play(int channel)
 {	
 	//if (channel == -1) pick the first free unreserved channel
-	
-	Mix_PlayChannel(channel, chunk, 0); 
 
+	Mix_PlayChannel(channel, chunk, 0);
 	cout << "Note " << getID() << " plays " << getAudioFile() << " on channel " << channel << endl;
+	do {} while (Mix_Playing(channel)); //wait for the reproduction to finish
+	*playing = false;
 	
 	return channel;
 }

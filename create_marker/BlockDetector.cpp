@@ -298,14 +298,14 @@ trainedBlock * BlockDetector::update(unordered_map<int, trainedBlock*>& tBlocks,
 			{
 				Note* note = new Note(*found->second);
 				note->setUpConf(config); //set configuration file
-				delete(found->second); //delete pointed element
+				//delete(found->second); //delete pointed element
 				found->second = note;
 			}
 			
 			else if (type == "function")
 			{
 				Function* func = new Function(*found->second);
-				delete(found->second);
+				//delete(found->second);
 				found->second = func;
 			}
 
@@ -398,6 +398,14 @@ bool BlockDetector::checkIfReference(unordered_map<int, trainedBlock*>& tBlocks,
 		else
 		{
 			thisBlock->setBlocks(firstOfItsKind->getBlocks()); //assign the pointer to the vector
+			
+			if (thisBlock->isLastLine())
+			{
+				std::cout << "Last line: " << thisBlock->getID() << std::endl;
+				thisBlock->setLooping(firstOfItsKind->looping);
+				thisBlock->setPlaying(firstOfItsKind->playing);
+			}
+	
 			ref = true;
 		}
 	}
@@ -482,7 +490,7 @@ void BlockDetector::setUpFunctions(std::vector<Token*> tokens, unordered_map<int
 		for (auto b : tBlocks)
 		{
 			bool foundLoop = false;
-			if (b.second->getType() == "function")
+			if (b.second->getType() == "function" && b.second->isDefined() && !b.second->isAReference())
 			{
 				for (auto t : tokens)
 				{
@@ -491,14 +499,17 @@ void BlockDetector::setUpFunctions(std::vector<Token*> tokens, unordered_map<int
 						*b.second->looping = true;
 						foundLoop = true;
 						std::cout << "Found loop for function: " << b.second->getID() << std::endl;
+						b.second->missingLoopCounter = 0;
 					}
 				}
 
-				if (!foundLoop) *b.second->looping = false;
+				if (!foundLoop) b.second->missingLoopCounter++;
+				if (!foundLoop && b.second->missingLoopCounter >= 3) *b.second->looping = false;
 			}
 
 		}
 	}
+
 }
 
 

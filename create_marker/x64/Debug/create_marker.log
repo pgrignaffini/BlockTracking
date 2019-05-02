@@ -10,10 +10,10 @@ c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstrac
           [
               _Tp=float
           ]
-c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(204): warning C4101: 'lastLine': unreferenced local variable
-c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(223): warning C4101: 'lastLine': unreferenced local variable
-c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(238): warning C4101: 'x_offset': unreferenced local variable
-c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(238): warning C4101: 'y_offset': unreferenced local variable
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(265): warning C4101: 'lastLine': unreferenced local variable
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(284): warning C4101: 'lastLine': unreferenced local variable
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(299): warning C4101: 'x_offset': unreferenced local variable
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(299): warning C4101: 'y_offset': unreferenced local variable
   create_marker.vcxproj -> C:\Users\Paolo Grignaffini\Desktop\create_marker\x64\Debug\blockDetection.exe
   Copy Intel RealSense SDK 2.0 shared module next to the application
   C:\Program Files (x86)\Intel RealSense SDK 2.0\bin\x64\realsense2.dll
