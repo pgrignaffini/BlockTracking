@@ -15,12 +15,14 @@ bool calibrationMode = false;
 //number of channels 
 const int N_CHANNEL = 32;
 //configuration file
-const string CONF = "conf/pianoConf.txt";  
+const string CONF = "conf/beatConf.txt";  
 
 //random channel number generator
 std::random_device                  rand_dev;
 std::mt19937                        generator(rand_dev());
 std::uniform_int_distribution<int>  distr(0, N_CHANNEL - 1);
+
+bool isPlayingInParallel = false;
 
 struct MouseParams 
 {
@@ -98,6 +100,9 @@ void playInParallel(std::vector<trainedBlock*> inParallel)
 		std::cout << inParallel.at(i)->getID() << " ";
 		inParallel.at(i)->play(i);
 	}
+
+	do {} while (Mix_Playing(-1));
+	isPlayingInParallel = false;
 	
 }
 
@@ -149,19 +154,25 @@ void CallBackBlocks(int event, int x, int y, int flags, void* userdata)
 
 	else if (event == cv::EVENT_LBUTTONDOWN)
 	{
-		std::cout << "LBUTTON clicked" << endl;
-		haltAllChannels(mp->blocks);
-
-		std::vector<trainedBlock*> inParallel = getParallelBlocks(mp->blocks);
-
-		for (auto b : inParallel)
+		if (isPlayingInParallel) return;
+		else
 		{
-			*b->playing = true;
-			*b->interrupted = false;
-		}
+			isPlayingInParallel = true;
+			std::cout << "LBUTTON clicked" << endl;
+			haltAllChannels(mp->blocks);
 
-		std::thread t(playInParallel, inParallel);
-		t.detach();
+			std::vector<trainedBlock*> inParallel = getParallelBlocks(mp->blocks);
+
+			for (auto b : inParallel)
+			{
+				*b->playing = true;
+				*b->interrupted = false;
+			}
+
+			std::thread t(playInParallel, inParallel);
+			t.detach();
+		}
+		
 	}
 
 	else if (event == cv::EVENT_MBUTTONDOWN)
@@ -178,7 +189,6 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 	std::cout << "Finger detected" << endl;
 	trainedBlock* clicked = nullptr;
 	cv::Point blockPos;
-	cv::Point br = board->getBottom_right_corner();
 	cv::Rect bline = board->getBottomLine();
 	cv::Rect tipArea = hand->getTipArea();
 	cv::Point fingerTip = hand->getFinger();
@@ -186,18 +196,24 @@ void PlayWithGestures(Hand* hand, Board* board, unordered_map<int, trainedBlock*
 
 	if (bline.contains(fingerTip))
 	{
-		Mix_ExpireChannel(-1, 10); //halts all channels
-
-		std::vector<trainedBlock*> inParallel = getParallelBlocks(blocks);
-
-		for (auto b : inParallel)
+		if (isPlayingInParallel) return;
+		else
 		{
-			*b->playing = true;
-			*b->interrupted = false;
-		}
+			isPlayingInParallel = true;
+			std::cout << "LBUTTON clicked" << endl;
+			haltAllChannels(blocks);
 
-		std::thread t(playInParallel, inParallel);
-		t.detach();;
+			std::vector<trainedBlock*> inParallel = getParallelBlocks(blocks);
+
+			for (auto b : inParallel)
+			{
+				*b->playing = true;
+				*b->interrupted = false;
+			}
+
+			std::thread t(playInParallel, inParallel);
+			t.detach();
+		}
 	}
 
 	else
@@ -349,9 +365,27 @@ int main(int argc, char* argv[])
 
 	rs2::context rsCtx;
 	auto list = rsCtx.query_devices();
-	rs2::device rsCam = list.front();
-	rs2::pipeline pipe = rs2::pipeline();
-	rs2::pipeline_profile selection = pipe.start();
+
+	cout << list.size() << endl;
+	
+	if (list.size() == 0)
+		throw std::runtime_error("No device detected");
+
+	//rs2::device rsCam = list.front();
+	rs2::pipeline pipe;// = rs2::pipeline();
+	rs2::config cfg;
+	cfg.enable_stream(RS2_STREAM_COLOR, FRAME_WIDTH, FRAME_HEIGHT, RS2_FORMAT_BGR8, 30);
+	pipe.start(cfg);
+
+	rs2::frameset frames;
+
+	for (int i = 0; i < 30; i++)
+	{
+		frames = pipe.wait_for_frames();
+	}
+
+	//rs2::pipeline_profile selection = pipe.start();
+
 
 	//Matrix to store each frame of the webcam feed
 	cv::Mat distanceCoefficients, HSV;
@@ -384,21 +418,25 @@ int main(int argc, char* argv[])
 	{
 		
 		cv::Mat cameraFeed, cameraFeedT, bgr;
-		auto rgbStream = selection.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
-		auto height = rgbStream.height();
-		auto width = rgbStream.width();
+		//auto rgbStream = selection.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
+		//auto height = rgbStream.height();
+		//auto width = rgbStream.width();
 		//cout << height << width << endl;
-		rs2::frameset frames = pipe.wait_for_frames();
+		//rs2::frameset frames = pipe.wait_for_frames();
+		frames = pipe.wait_for_frames();
 
 		if (frames.size() > 0) 
 		{
 			//acquire frames from camera
-			rs2::frame rgbFrame = frames.first(RS2_STREAM_COLOR); 
-			bgr = cv::Mat(height, width, CV_8UC3, (void*)rgbFrame.get_data());
-			cvtColor(bgr, cameraFeed, cv::COLOR_BGR2RGB);
+			//rs2::frame rgbFrame = frames.first(RS2_STREAM_COLOR); 
+			//bgr = cv::Mat(height, width, CV_8UC3, (void*)rgbFrame.get_data());
+			rs2::frame color_frame = frames.get_color_frame();
+			cameraFeed = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3, (void*)color_frame.get_data(), cv::Mat::AUTO_STEP);
+			//cvtColor(bgr, cameraFeed, cv::COLOR_BGR2RGB);
 			if (cv::waitKey(1000 / 60) >= 0) break;
 		}
-	
+
+		
 		//convert frame from BGR to HSV colorspace
 		cvtColor(cameraFeed, HSV, cv::COLOR_BGR2HSV);
 		//imshow("HSV", HSV);
@@ -454,18 +492,18 @@ int main(int argc, char* argv[])
 
 			std::cout << "Tokens: " << tokens.size() << std::endl;
 
-			//hand->findFinger(threshold_hand);
-			//hand->calculateTipArea();
+			hand->findFinger(threshold_hand);
+			hand->calculateTipArea();
 
 			drawObject(trainBlocks, cameraFeed);
-			//drawFinger(hand, cameraFeed);
+			drawFinger(hand, cameraFeed);
 			drawTokens(tokens, cameraFeed);
 		
 			///Show frames 
-			imshow("Block threshold", threshold_block);
-			imshow("Token threshold", threshold_token);
-			imshow("Board threshold", threshold_board);
-			//imshow("Hand threshold",  threshold_hand);
+			//imshow("Block threshold", threshold_block);
+			//imshow("Token threshold", threshold_token);
+			//imshow("Board threshold", threshold_board);
+			imshow("Hand threshold",  threshold_hand);
 
 		}
 

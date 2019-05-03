@@ -9,8 +9,8 @@ const double TIP_THRESH = 0.5;
 Hand::Hand()
 {
 	subtractor = cv::createBackgroundSubtractorMOG2(250, 20, true);
-	hsvMin = cv::Scalar(63, 123, 0);
-	hsvMax = cv::Scalar(256, 256, 158);
+	hsvMin = cv::Scalar(60, 170, 0);
+	hsvMax = cv::Scalar(256, 256, 256);
 	boundingBox = cv::Rect();
 	detected = false;
 	fingertip = cv::Point(0, 0);

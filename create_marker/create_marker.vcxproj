@@ -87,6 +87,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\Paolo Grignaffini\Desktop\create_marker\create_marker\SDL2\include;C:\Users\Paolo Grignaffini\Desktop\create_marker\create_marker\SDL2_mixer\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Paolo Grignaffini\Desktop\create_marker\create_marker\SDL2_mixer\lib\x64;C:\Users\Paolo Grignaffini\Desktop\create_marker\create_marker\SDL2\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -158,8 +160,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Program Files %28x86%29\Intel RealSense SDK 2.0\lib\x64;C:\Users\Paolo Grignaffini\Documents\Visual Studio 2015\Projects\create_marker\create_marker\sfml\lib;$(OPENCV_DIR)\x64\vc14\lib;C:\Users\Paolo Grignaffini\Documents\opencv\opencvDirs\opencvX\lib\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_aruco400d.lib;opencv_highgui400d.lib;opencv_imgcodecs400d.lib;opencv_imgproc400d.lib;opencv_core400d.lib;opencv_calib3d400d.lib;opencv_ccalib400d.lib;opencv_videoio400d.lib;opencv_video400d.lib;%(AdditionalDependencies);sfml-system.lib;sfml-window.lib;sfml-network.lib;sfml-audio.lib;sfml-graphics.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files %28x86%29\Intel RealSense SDK 2.0\lib\x64;C:\Users\Paolo Grignaffini\Documents\Visual Studio 2015\Projects\create_marker\create_marker\sfml\lib;$(OPENCV_DIR)\x64\vc14\lib;C:\Users\Paolo Grignaffini\Documents\opencv\opencvDirs\opencvX\lib\Release\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_mixer.lib;opencv_aruco400.lib;opencv_highgui400.lib;opencv_imgcodecs400.lib;opencv_imgproc400.lib;opencv_core400.lib;opencv_calib3d400.lib;opencv_ccalib400.lib;opencv_videoio400.lib;opencv_video400.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>

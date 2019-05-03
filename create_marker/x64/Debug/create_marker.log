@@ -1,4 +1,48 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(391,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (aruco_marker.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  stdafx.cpp
+  Block.cpp
+  BlockDetector.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(109): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(114): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(343): warning C4101: 'to_find': unreferenced local variable
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(451): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(465): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(466): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(552): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(574): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(575): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(640): warning C4101: 'current': unreferenced local variable
+  Board.cpp
+  CameraCalibration.cpp
+  ColorCalibration.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(32): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(32): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(33): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(33): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(34): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(34): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(35): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(35): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(36): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(36): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(37): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\paolo grignaffini\desktop\create_marker\create_marker\colorcalibration.cpp(37): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  ConfigurationManager.cpp
+  Function.cpp
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\function.cpp(89): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\function.cpp(90): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=float
+          ]
+  Hand.cpp
+  Note.cpp
+  Token.cpp
+  trainedBlock.cpp
   trainedBlocksTracking.cpp
 c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(50): warning C4244: 'argument': conversion from 'int' to '_Tp', possible loss of data
           with
@@ -14,6 +58,8 @@ c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstrac
 c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(284): warning C4101: 'lastLine': unreferenced local variable
 c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(299): warning C4101: 'x_offset': unreferenced local variable
 c:\users\paolo grignaffini\desktop\create_marker\create_marker\trainedblockstracking.cpp(299): warning C4101: 'y_offset': unreferenced local variable
+  Generating Code...
+c:\users\paolo grignaffini\desktop\create_marker\create_marker\blockdetector.cpp(334): warning C4715: 'BlockDetector::update': not all control paths return a value
   create_marker.vcxproj -> C:\Users\Paolo Grignaffini\Desktop\create_marker\x64\Debug\blockDetection.exe
   Copy Intel RealSense SDK 2.0 shared module next to the application
   C:\Program Files (x86)\Intel RealSense SDK 2.0\bin\x64\realsense2.dll
